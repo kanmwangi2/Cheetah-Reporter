@@ -1,0 +1,13 @@
+Account Code,Account Name,Debit,Credit
+1000,Cash and Cash Equivalents,50000,0
+1100,Accounts Receivable,25000,0
+1200,Inventory,35000,0
+1500,Property Plant and Equipment,150000,0
+2000,Accounts Payable,0,15000
+2100,Accrued Expenses,0,8000
+2200,Bank Loan,0,50000
+3000,Share Capital,0,100000
+3100,Retained Earnings,0,87000
+4000,Revenue,0,120000
+5000,Cost of Goods Sold,75000,0
+6000,Operating Expenses,45000,0
