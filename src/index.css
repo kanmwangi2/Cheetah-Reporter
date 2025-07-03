@@ -51,12 +51,33 @@
 
 @layer base {
   * {
-    @apply border-gray-200;
+    @apply border-border;
   }
+  
   body {
-    @apply bg-white text-gray-900;
+    @apply bg-background text-foreground;
     margin: 0;
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     min-height: 100vh;
+  }
+
+  /* Ensure all form elements inherit proper dark mode styling */
+  input, textarea, select {
+    @apply bg-background text-foreground;
+  }
+
+  /* Improve dark mode contrast for better visibility */
+  .dark input, .dark textarea, .dark select {
+    @apply bg-muted border-border text-foreground;
+  }
+
+  /* Ensure buttons are visible in dark mode */
+  .dark button:not(.btn-primary) {
+    @apply text-foreground;
+  }
+
+  /* Fix icon colors in dark mode */
+  .dark .text-gray-400 {
+    @apply text-muted-foreground;
   }
 }

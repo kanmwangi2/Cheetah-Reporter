@@ -10,12 +10,16 @@ import { Preview } from './components/pages/Preview'
 import { CollaborationPanel } from './components/CollaborationPanel'
 import { useUIStore } from './store/uiStore'
 import { useProjectStore } from './store/projectStore'
+import { useTheme } from './hooks/useTheme'
 import './index.css'
 
 function AppContent() {
   const { user, userProfile, loading } = useAuth()
   const { currentView } = useUIStore()
   const { subscribeToUserProjects } = useProjectStore()
+  
+  // Initialize theme system
+  useTheme()
 
   // Subscribe to user's projects when authenticated
   useEffect(() => {

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
 interface UIState {
-  theme: 'light' | 'dark'
+  theme: 'light' | 'dark' | 'system'
   sidebarOpen: boolean
   currentView: 'dashboard' | 'project-setup' | 'data-import' | 'report-editor' | 'preview' | 'collaboration' | 'user-profile' | 'settings'
   activeTab: 'sfp' | 'pnl' | 'soce' | 'scf' | 'notes'
@@ -11,7 +11,7 @@ interface UIState {
   
   // Actions
   toggleTheme: () => void
-  setTheme: (theme: 'light' | 'dark') => void
+  setTheme: (theme: 'light' | 'dark' | 'system') => void
   toggleSidebar: () => void
   setSidebarOpen: (open: boolean) => void
   setCurrentView: (view: UIState['currentView']) => void
@@ -30,9 +30,12 @@ export const useUIStore = create<UIState>()(
         isCommentSidebarOpen: false,
         selectedCommentElementId: null,
 
-        toggleTheme: () => set((state) => ({
-          theme: state.theme === 'light' ? 'dark' : 'light'
-        })),
+        toggleTheme: () => set((state) => {
+          const themes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system']
+          const currentIndex = themes.indexOf(state.theme)
+          const nextIndex = (currentIndex + 1) % themes.length
+          return { theme: themes[nextIndex] }
+        }),
 
         setTheme: (theme) => set({ theme }),
 
