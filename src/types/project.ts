@@ -19,8 +19,8 @@ export interface PeriodData {
 }
 
 export interface TrialBalanceData {
-  rawData: Record<string, unknown>[];
-  mappings: Record<string, string>;
+  rawData: TrialBalanceAccount[];
+  mappings: { [accountId: string]: { statement: string; lineItem: string } };
 }
 
 export interface AuditLog {

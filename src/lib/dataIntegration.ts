@@ -19,9 +19,9 @@ export interface AccountMappingSuggestion {
 }
 
 export const MAPPING_RULES: { statement: keyof MappedTrialBalance; lineItem: string; patterns: RegExp[] }[] = [
-    // Income
-    { statement: 'income', lineItem: 'Revenue', patterns: [/revenue/i, /sales/i, /turnover/i, /income/i] },
-    { statement: 'income', lineItem: 'Other Income', patterns: [/other income/i, /sundry income/i] },
+    // Revenue (was income)
+    { statement: 'revenue', lineItem: 'Revenue', patterns: [/revenue/i, /sales/i, /turnover/i, /income/i] },
+    { statement: 'revenue', lineItem: 'Other Income', patterns: [/other income/i, /sundry income/i] },
     // Expenses
     { statement: 'expenses', lineItem: 'Cost of Sales', patterns: [/cost of sales/i, /cogs/i] },
     { statement: 'expenses', lineItem: 'Administrative Expenses', patterns: [/admin/i, /administrative/i, /general expense/i] },

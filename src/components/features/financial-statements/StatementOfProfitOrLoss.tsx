@@ -1,7 +1,31 @@
 import React from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { renderLine } from './financialStatementUtils';
-import type { FinancialStatementLine, PeriodData } from '@/types/project';
+import type { FinancialStatementLine, PeriodData, TrialBalanceAccount } from '@/types/project';
+
+const createFinancialStatementLine = (
+  id: string,
+  label: string,
+  lineItems: { [lineItem: string]: TrialBalanceAccount[] }
+): FinancialStatementLine => {
+  const subLines: FinancialStatementLine[] = Object.entries(lineItems).map(([key, accounts]) => ({
+    id: key,
+    label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+    accounts,
+    total: accounts.reduce((sum, acc) => sum + acc.debit + acc.credit, 0),
+    subLines: []
+  }));
+
+  const total = subLines.reduce((sum, line) => sum + line.total, 0);
+
+  return {
+    id,
+    label,
+    accounts: [],
+    total,
+    subLines
+  };
+};
 
 export const StatementOfProfitOrLoss: React.FC = () => {
   const { currentProject, activePeriodId } = useProjectStore();
@@ -32,21 +56,31 @@ export const StatementOfProfitOrLoss: React.FC = () => {
 
   const { mappedTrialBalance } = activePeriod;
   const { currency } = currentProject;
-  const { income, expenses } = mappedTrialBalance;
+  const { revenue, expenses } = mappedTrialBalance;
 
-  if (!income || !expenses) {
+  if (!revenue || !expenses) {
       return (
         <div className="p-6 text-center bg-muted rounded-lg">
-            <p className="text-muted-foreground">Income or Expenses data is missing in the mapped trial balance for this period.</p>
+            <p className="text-muted-foreground">Revenue or Expenses data is missing in the mapped trial balance for this period.</p>
         </div>
       )
   }
+
+  // Convert the mapped trial balance data to FinancialStatementLine objects
+  const revenueLines = createFinancialStatementLine('revenue', 'Revenue', revenue);
+  const expenseLines = createFinancialStatementLine('expenses', 'Expenses', expenses);
+
+  // Helper function to find expense line item total by name
+  const getExpenseTotal = (lineItemName: string): number => {
+    const lineItem = expenseLines.subLines?.find(line => line.id === lineItemName);
+    return lineItem?.total || 0;
+  };
 
   // --- Calculated Totals ---
   const grossProfit: FinancialStatementLine = {
     id: 'gross-profit',
     label: 'Gross Profit',
-    total: (income.total || 0) - (expenses.subLines?.find((l: FinancialStatementLine) => l.id === 'cogs')?.total || 0),
+    total: revenueLines.total - getExpenseTotal('cogs'),
     accounts: [],
     isBold: true,
   };
@@ -54,7 +88,7 @@ export const StatementOfProfitOrLoss: React.FC = () => {
   const operatingProfit: FinancialStatementLine = {
     id: 'operating-profit',
     label: 'Profit from Operations',
-    total: grossProfit.total - (expenses.subLines?.find((l: FinancialStatementLine) => l.id === 'opex')?.total || 0),
+    total: grossProfit.total - getExpenseTotal('opex'),
     accounts: [],
     isBold: true,
   };
@@ -62,7 +96,7 @@ export const StatementOfProfitOrLoss: React.FC = () => {
   const profitBeforeTax: FinancialStatementLine = {
     id: 'profit-before-tax',
     label: 'Profit Before Tax',
-    total: operatingProfit.total - (expenses.subLines?.find((l: FinancialStatementLine) => l.id === 'finance-costs')?.total || 0),
+    total: operatingProfit.total - getExpenseTotal('finance-costs'),
     accounts: [],
     isBold: true,
   };
@@ -70,7 +104,7 @@ export const StatementOfProfitOrLoss: React.FC = () => {
   const profitForTheYear: FinancialStatementLine = {
     id: 'profit-for-the-year',
     label: 'Profit for the year',
-    total: profitBeforeTax.total - (expenses.subLines?.find((l: FinancialStatementLine) => l.id === 'tax-expense')?.total || 0),
+    total: profitBeforeTax.total - getExpenseTotal('tax-expense'),
     accounts: [],
     isBold: true,
   };
@@ -80,11 +114,11 @@ export const StatementOfProfitOrLoss: React.FC = () => {
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4 text-foreground">Statement of Profit or Loss</h2>
       <div className="space-y-2">
-        {/* Income */}
-        {renderLine(income, currency)}
+        {/* Revenue */}
+        {renderLine(revenueLines, currency)}
         
         {/* Expenses */}
-        {renderLine(expenses, currency)}
+        {renderLine(expenseLines, currency)}
 
         {/* Gross Profit */}
         {renderLine(grossProfit, currency, false, true)}

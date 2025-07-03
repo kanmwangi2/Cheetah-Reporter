@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useProjectStore } from '../store/projectStore'
+import { useAuth } from '../contexts/AuthContext'
 import { Button } from './ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { Input } from './ui/Input'
@@ -23,6 +24,7 @@ interface Comment {
 
 export const CollaborationPanel: React.FC = () => {
   const { currentProject, updateProject } = useProjectStore()
+  const { user, userProfile } = useAuth()
   const [inviteForm, setInviteForm] = useState<CollaboratorInvite>({
     email: '',
     role: 'editor',
@@ -72,7 +74,7 @@ export const CollaborationPanel: React.FC = () => {
         ...currentProject.collaborators,
         [inviteForm.email]: inviteForm.role
       }
-    })
+    }, user?.uid || '', userProfile?.email || '')
 
     // Reset form
     setInviteForm({ email: '', role: 'editor', message: '' })
@@ -87,7 +89,7 @@ export const CollaborationPanel: React.FC = () => {
     const { [userId]: removed, ...remainingCollaborators } = currentProject.collaborators
     updateProject(currentProject.id, {
       collaborators: remainingCollaborators
-    })
+    }, user?.uid || '', userProfile?.email || '')
   }
 
   const updateCollaboratorRole = (userId: string, newRole: 'admin' | 'editor' | 'viewer') => {
@@ -98,7 +100,7 @@ export const CollaborationPanel: React.FC = () => {
         ...currentProject.collaborators,
         [userId]: newRole
       }
-    })
+    }, user?.uid || '', userProfile?.email || '')
   }
 
   const formatTimeAgo = (date: Date) => {

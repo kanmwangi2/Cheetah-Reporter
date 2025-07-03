@@ -310,19 +310,19 @@ export const validateUnmappedAccounts = (periodData: PeriodData): ValidationResu
     if (!periodData.mappedTrialBalance) {
         return { check: "unmapped-accounts", status: "pass", isValid: true, message: "Mapped trial balance not available, skipping unmapped account check." };
     }
-    const allAccountIds = new Set(periodData.trialBalance.rawData.map((acc: Record<string, unknown>) => acc.accountId as string).filter(Boolean));
+    const allAccountIds = new Set(periodData.trialBalance.rawData.map(acc => acc.accountId).filter(Boolean));
     const mappedAccountIds = getMappedAccountIds(periodData.mappedTrialBalance);
 
     const unmappedIds = new Set([...allAccountIds].filter(id => !mappedAccountIds.has(id)));
 
     if (unmappedIds.size > 0) {
-        const unmappedAccounts = periodData.trialBalance.rawData.filter((acc: Record<string, unknown>) => acc.accountId && unmappedIds.has(acc.accountId as string));
+        const unmappedAccounts = periodData.trialBalance.rawData.filter(acc => acc.accountId && unmappedIds.has(acc.accountId));
         return {
             check: "unmapped-accounts",
             status: "warning",
             isValid: false,
             message: `Found ${unmappedAccounts.length} unmapped trial balance accounts.`,
-            details: { unmappedAccounts: unmappedAccounts.map((a: Record<string, unknown>) => `${a.accountName} (${a.accountId})`) },
+            details: { unmappedAccounts: unmappedAccounts.map(a => `${a.accountName} (${a.accountId})`) },
         };
     }
 

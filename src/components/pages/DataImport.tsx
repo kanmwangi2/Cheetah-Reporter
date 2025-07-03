@@ -11,7 +11,7 @@ interface CSVRow {
 }
 
 export const DataImport: React.FC = () => {
-  const { currentProject, updateProject } = useProjectStore()
+  const { currentProject, activePeriodId, updatePeriodTrialBalance } = useProjectStore()
   const { setCurrentView } = useUIStore()
   
   const [currentStep, setCurrentStep] = useState(1)
@@ -97,25 +97,24 @@ export const DataImport: React.FC = () => {
     }
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 2) {
       validateTrialBalance()
     } else if (currentStep === 3) {
       // Save trial balance data and proceed to report editor
-      if (currentProject) {
+      if (currentProject && activePeriodId) {
+        // Process and save trial balance entries
         const trialBalanceEntries = csvData.map(row => ({
-          accountCode: row[columnMappings.accountCode] || '',
+          accountId: row[columnMappings.accountCode] || '',
           accountName: row[columnMappings.accountName] || '',
           debit: parseFloat(row[columnMappings.debit] || '0') || 0,
           credit: parseFloat(row[columnMappings.credit] || '0') || 0,
-          balance: (parseFloat(row[columnMappings.debit] || '0') || 0) - (parseFloat(row[columnMappings.credit] || '0') || 0)
         }))
 
-        updateProject(currentProject.id, {
-          trialBalance: {
-            rawData: trialBalanceEntries,
-            mappings: columnMappings
-          }
+        // Update the active period's trial balance
+        await updatePeriodTrialBalance(activePeriodId, {
+          rawData: trialBalanceEntries,
+          mappings: {}
         })
         
         setCurrentView('report-editor')

@@ -38,7 +38,11 @@ export const CommentThread: React.FC<CommentThreadProps> = ({ projectId, element
 
   const renderComment = (comment: Comment, allComments: Comment[]) => {
     const replies = allComments.filter(c => c.parentCommentId === comment.id)
-                               .sort((a, b) => a.createdAt.seconds - b.createdAt.seconds);
+                               .sort((a, b) => {
+                                 const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : a.createdAt.seconds * 1000;
+                                 const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : b.createdAt.seconds * 1000;
+                                 return aTime - bTime;
+                               });
     return (
       <div key={comment.id} className="pl-4 border-l-2 border-gray-700/50 cursor-pointer hover:bg-slate-800/50 rounded-r-lg" onClick={() => onCommentSelect && onCommentSelect(comment.elementId)}>
         <CommentView projectId={projectId} comment={comment} onReply={() => handleReply(comment.id)} />
@@ -59,7 +63,11 @@ export const CommentThread: React.FC<CommentThreadProps> = ({ projectId, element
   };
 
   const topLevelComments = comments.filter(c => !c.parentCommentId)
-                                   .sort((a, b) => a.createdAt.seconds - b.createdAt.seconds);
+                                   .sort((a, b) => {
+                                     const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : a.createdAt.seconds * 1000;
+                                     const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : b.createdAt.seconds * 1000;
+                                     return aTime - bTime;
+                                   });
 
   if (isLoading) return <div>Loading comments...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;

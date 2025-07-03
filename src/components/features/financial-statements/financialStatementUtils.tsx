@@ -1,4 +1,3 @@
-import React from 'react';
 import type { FinancialStatementLine } from '@/types/project';
 import { Commentable } from '../comments/Commentable';
 import { cn } from '@/lib/utils';

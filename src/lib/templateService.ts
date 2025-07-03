@@ -38,8 +38,15 @@ export const createTemplateFromProject = async (
     createdBy: user.uid,
     createdAt: serverTimestamp() as unknown as Date | { seconds: number; nanoseconds: number },
     ifrsStandard: project.ifrsStandard,
-    // Strips transactional data, keeps the structure
-    trialBalanceMappings: project.periods[0]?.trialBalance?.mappings || {},
+    // Convert mappings from complex object to simple string mapping
+    trialBalanceMappings: project.periods[0]?.trialBalance?.mappings 
+      ? Object.fromEntries(
+          Object.entries(project.periods[0].trialBalance.mappings).map(([accountId, mapping]) => [
+            accountId, 
+            `${mapping.statement}:${mapping.lineItem}`
+          ])
+        )
+      : {},
     notesStructure: project.notes || {},
     // Add other structural elements here
   };

@@ -34,7 +34,10 @@ export const calculateStatementOfChangesInEquity = (mappedTb: MappedTrialBalance
   // than is currently available in the MappedTrialBalance (e.g., prior year data).
   // We will assume opening balances are zero for now.
 
-  const profitForTheYear = (mappedTb.income.total || 0) - (mappedTb.expenses.total || 0);
+  // Calculate totals for revenue and expenses
+  const revenueTotal = Object.values(mappedTb.revenue).flat().reduce((sum, acc) => sum + acc.debit + acc.credit, 0);
+  const expensesTotal = Object.values(mappedTb.expenses).flat().reduce((sum, acc) => sum + acc.debit + acc.credit, 0);
+  const profitForTheYear = revenueTotal - expensesTotal;
   const shareCapitalIssued = getEquityValue(mappedTb, 'share-capital-issued'); // Assuming this ID exists
   const dividendsPaid = getEquityValue(mappedTb, 'dividends-paid'); // Assuming this ID exists
   const oci = getEquityValue(mappedTb, 'other-comprehensive-income'); // Assuming this ID exists

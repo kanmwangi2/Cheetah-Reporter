@@ -1,4 +1,4 @@
-import type { MappedTrialBalance, FinancialStatementLine } from '../types/project';
+import type { MappedTrialBalance, FinancialStatementLine, TrialBalanceAccount } from '../types/project';
 
 /**
  * Recursively calculates the total for a financial statement line by summing up the balances of its accounts
@@ -60,17 +60,25 @@ const findAndSumLineItem = (line: FinancialStatementLine, key: string): number |
   return null;
 };
 
+// Helper function to find line item total in MappedTrialBalance dictionary structure
+const findLineItemInMappedSection = (section: { [lineItem: string]: TrialBalanceAccount[] }, key: string): number | null => {
+  if (section[key]) {
+    return section[key].reduce((sum, account) => sum + account.debit + account.credit, 0);
+  }
+  return null;
+};
+
 export const getSumForLineItem = (mappedTb: MappedTrialBalance, lineItemKey: string): number => {
-  const topLevelLines = [
+  const sections = [
     mappedTb.assets,
     mappedTb.liabilities,
     mappedTb.equity,
-    mappedTb.income,
+    mappedTb.revenue,
     mappedTb.expenses,
   ];
 
-  for (const topLevelLine of topLevelLines) {
-    const total = findAndSumLineItem(topLevelLine, lineItemKey);
+  for (const section of sections) {
+    const total = findLineItemInMappedSection(section, lineItemKey);
     if (total !== null) {
       return total;
     }

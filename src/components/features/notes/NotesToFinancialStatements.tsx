@@ -15,14 +15,17 @@ const NoteEditor = ({ content }: { content: string }) => {
 }
 
 export const NotesToFinancialStatements: React.FC = () => {
-  const project = useProjectStore((state) => state.currentProject);
+  const { currentProject, activePeriodId } = useProjectStore();
 
-  if (!project) {
+  if (!currentProject) {
     return <div>Loading project data...</div>;
   }
 
+  const activePeriod = currentProject.periods.find(p => p.id === activePeriodId);
+  const reportingDate = activePeriod?.reportingDate ? new Date(activePeriod.reportingDate) : new Date();
+
   // Placeholder notes data structure. In a real app, this would be more complex.
-  const notes = project.notes || {
+  const notes = currentProject.notes || {
     accountingPolicies: {
         title: "1. Significant Accounting Policies",
         content: "<p>The principal accounting policies applied in the preparation of these financial statements are set out below.</p>"
@@ -43,16 +46,17 @@ export const NotesToFinancialStatements: React.FC = () => {
     <Card>
       <CardHeader>
         <CardTitle>Notes to the Financial Statements</CardTitle>
-        <p className="text-sm text-muted-foreground">For the year ended {new Date(project.reportingDate).toLocaleDateString()}</p>
+        <p className="text-sm text-muted-foreground">For the year ended {reportingDate.toLocaleDateString()}</p>
       </CardHeader>
       <CardContent>
         <Accordion type="multiple" className="w-full">
             {noteKeys.map(noteKey => {
                 const note = notes[noteKey];
                 if(!note) return null;
+                const noteKeyStr = String(noteKey);
                 return (
-                    <Commentable key={noteKey} elementId={`note-${noteKey}`}>
-                        <AccordionItem value={noteKey.toString()}>
+                    <Commentable key={noteKeyStr} elementId={`note-${noteKeyStr}`}>
+                        <AccordionItem value={noteKeyStr}>
                             <AccordionTrigger>{note.title}</AccordionTrigger>
                             <AccordionContent>
                                 <NoteEditor content={note.content} />

@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import { type Project } from '../store/projectStore'
+import { type Project, type PeriodData } from '../types/project'
 import { formatCurrency } from './utils'
 
 interface PDFExportOptions {
@@ -11,10 +11,24 @@ interface PDFExportOptions {
 
 export class PDFExporter {
   private project: Project
+  private activePeriod: PeriodData
   private options: PDFExportOptions
 
-  constructor(project: Project, options: PDFExportOptions = {}) {
+  constructor(project: Project, activePeriodId?: string, options: PDFExportOptions = {}) {
     this.project = project
+    
+    // Find the active period or use the latest one
+    if (activePeriodId) {
+      const foundPeriod = project.periods.find(p => p.id === activePeriodId);
+      this.activePeriod = foundPeriod || project.periods[project.periods.length - 1];
+    } else {
+      this.activePeriod = project.periods[project.periods.length - 1];
+    }
+    
+    if (!this.activePeriod) {
+      throw new Error('No periods found in project for PDF export');
+    }
+    
     this.options = {
       includeNotes: true,
       includeAuditTrail: false,
@@ -34,7 +48,6 @@ export class PDFExporter {
 
       // Set up page dimensions
       const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
       const margin = 20
       const contentWidth = pageWidth - (2 * margin)
 
@@ -74,7 +87,7 @@ export class PDFExporter {
       this.addPageNumbers(pdf)
 
       // Save the PDF
-      const fileName = `${this.project.companyName}_Financial_Statements_${new Date(this.project.reportingDate).getFullYear()}.pdf`
+      const fileName = `${this.project.companyName}_Financial_Statements_${new Date(this.activePeriod.reportingDate).getFullYear()}.pdf`
       pdf.save(fileName)
       
     } catch (error) {
@@ -101,7 +114,7 @@ export class PDFExporter {
 
     // Reporting period
     pdf.setFontSize(14)
-    pdf.text(`For the year ended ${new Date(this.project.reportingDate).toLocaleDateString()}`, 
+    pdf.text(`For the year ended ${new Date(this.activePeriod.reportingDate).toLocaleDateString()}`, 
              margin + contentWidth / 2, yPosition, { align: 'center' })
     yPosition += 20
 
@@ -159,7 +172,7 @@ export class PDFExporter {
 
     pdf.setFontSize(12)
     pdf.setFont('helvetica', 'normal')
-    pdf.text(`As at ${new Date(this.project.reportingDate).toLocaleDateString()}`, margin, yPosition)
+    pdf.text(`As at ${new Date(this.activePeriod.reportingDate).toLocaleDateString()}`, margin, yPosition)
     yPosition += 15
 
     // Assets section
@@ -224,7 +237,7 @@ export class PDFExporter {
 
     pdf.setFontSize(12)
     pdf.setFont('helvetica', 'normal')
-    pdf.text(`For the year ended ${new Date(this.project.reportingDate).toLocaleDateString()}`, margin, yPosition)
+    pdf.text(`For the year ended ${new Date(this.activePeriod.reportingDate).toLocaleDateString()}`, margin, yPosition)
     yPosition += 15
 
     yPosition = this.addFinancialSection(pdf, margin, yPosition, contentWidth, '', [
@@ -267,7 +280,7 @@ export class PDFExporter {
 
     pdf.setFontSize(12)
     pdf.setFont('helvetica', 'normal')
-    pdf.text(`For the year ended ${new Date(this.project.reportingDate).toLocaleDateString()}`, margin, yPosition)
+    pdf.text(`For the year ended ${new Date(this.activePeriod.reportingDate).toLocaleDateString()}`, margin, yPosition)
     yPosition += 15
 
     // Table headers
@@ -371,7 +384,7 @@ export class PDFExporter {
 
     pdf.setFontSize(12)
     pdf.setFont('helvetica', 'normal')
-    pdf.text(`For the year ended ${new Date(this.project.reportingDate).toLocaleDateString()}`, margin, yPosition)
+    pdf.text(`For the year ended ${new Date(this.activePeriod.reportingDate).toLocaleDateString()}`, margin, yPosition)
     yPosition += 15
 
     yPosition = this.addFinancialSection(pdf, margin, yPosition, contentWidth, 'Cash flows from operating activities', [
@@ -532,16 +545,16 @@ export class PDFExporter {
   }
 
   private calculateFinancialData() {
-    if (!this.project?.trialBalance.rawData) return null
+    if (!this.activePeriod?.trialBalance?.rawData) return null
 
-    const trialBalance = this.project.trialBalance.rawData
+    const trialBalance = this.activePeriod.trialBalance.rawData
     
     const getAccountsByCategory = (keywords: string[], isCredit = false) => {
-      return trialBalance.filter(item => 
-        keywords.some(keyword => 
+      return trialBalance.filter((item: any) => 
+        keywords.some((keyword: string) => 
           item.accountName.toLowerCase().includes(keyword.toLowerCase())
         )
-      ).reduce((sum, item) => {
+      ).reduce((sum: number, item: any) => {
         return sum + (isCredit ? Math.abs(item.balance) : item.balance)
       }, 0)
     }
@@ -611,7 +624,7 @@ export class PDFExporter {
   }
 }
 
-export async function exportProjectToPDF(project: Project, options?: PDFExportOptions): Promise<void> {
-  const exporter = new PDFExporter(project, options)
+export async function exportProjectToPDF(project: Project, activePeriodId?: string, options?: PDFExportOptions): Promise<void> {
+  const exporter = new PDFExporter(project, activePeriodId, options)
   await exporter.exportToPDF()
 }

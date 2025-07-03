@@ -50,9 +50,11 @@ export const CommentView: React.FC<CommentViewProps> = ({ projectId, comment, on
     setIsEditing(false);
   };
 
-  const formattedDate = comment.createdAt?.seconds 
-    ? formatDistanceToNow(new Date(comment.createdAt.seconds * 1000), { addSuffix: true })
-    : 'Just now';
+  const formattedDate = comment.createdAt instanceof Date 
+    ? formatDistanceToNow(comment.createdAt, { addSuffix: true })
+    : comment.createdAt?.seconds 
+      ? formatDistanceToNow(new Date(comment.createdAt.seconds * 1000), { addSuffix: true })
+      : 'Just now';
 
   return (
     <div className="flex items-start space-x-3 py-3">

@@ -27,7 +27,7 @@ export const Preview: React.FC = () => {
 
     setIsExporting(true);
     try {
-      await exportProjectToPDF(currentProject, {
+      await exportProjectToPDF(currentProject, activePeriodId || undefined, {
         includeNotes: true,
         includeAuditTrail: false,
         pageSize: 'A4',

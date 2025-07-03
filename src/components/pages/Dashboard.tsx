@@ -118,7 +118,10 @@ export const Dashboard: React.FC = () => {
                       <CardTitle className="text-lg">{project.companyName}</CardTitle>
                       <CardDescription className="flex items-center gap-2 pt-1">
                         <Calendar className="h-4 w-4" />
-                        {new Date(project.reportingDate).toLocaleDateString()}
+                        {project.periods && project.periods.length > 0 
+                          ? new Date(project.periods[project.periods.length - 1].reportingDate).toLocaleDateString()
+                          : 'No periods'
+                        }
                       </CardDescription>
                     </CardHeader>
                     <CardContent>

@@ -29,6 +29,7 @@ interface ProjectState {
   deleteProject: (projectId: string, userId: string, userEmail: string) => Promise<void>;
   addPeriod: (projectId: string, periodData: Omit<PeriodData, 'id'>, userId: string, userEmail: string) => Promise<void>;
   updatePeriodTrialBalance: (periodId: string, trialBalanceData: TrialBalanceData) => Promise<void>;
+  subscribeToUserProjects: (userId: string) => () => void;
 }
 
 export const useProjectStore = create<ProjectState>()(
@@ -68,7 +69,7 @@ export const useProjectStore = create<ProjectState>()(
             if (template) {
               templateData = {
                 ifrsStandard: template.ifrsStandard,
-                notes: template.notesStructure || {},
+                notes: (template.notesStructure as { [noteId: string]: { title: string; content: string; order: number } }) || {},
               };
               templateMappings = template.trialBalanceMappings || {};
             }
@@ -210,6 +211,12 @@ export const useProjectStore = create<ProjectState>()(
           const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
           set({ error: `Error deleting project: ${errorMessage}`, loading: false });
       }
+    },
+    subscribeToUserProjects: (userId: string) => {
+      // This would typically return an unsubscribe function from Firebase
+      // For now, we'll load projects once and return a no-op function
+      get().loadUserProjects(userId);
+      return () => {}; // Unsubscribe function
     },
     }),
     {

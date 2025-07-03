@@ -1,6 +1,6 @@
 import React from 'react';
 import { useProjectStore } from '@/store/projectStore';
-import type { FinancialStatementLine, PeriodData } from '@/types/project';
+import type { FinancialStatementLine, PeriodData, TrialBalanceAccount } from '@/types/project';
 import { Commentable } from '../comments/Commentable';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,30 @@ const formatCurrency = (value: number, currency: string) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
+};
+
+const createFinancialStatementLine = (
+  id: string,
+  label: string,
+  lineItems: { [lineItem: string]: TrialBalanceAccount[] }
+): FinancialStatementLine => {
+  const subLines: FinancialStatementLine[] = Object.entries(lineItems).map(([key, accounts]) => ({
+    id: key,
+    label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+    accounts,
+    total: accounts.reduce((sum, acc) => sum + acc.debit + acc.credit, 0),
+    subLines: []
+  }));
+
+  const total = subLines.reduce((sum, line) => sum + line.total, 0);
+
+  return {
+    id,
+    label,
+    accounts: [],
+    total,
+    subLines
+  };
 };
 
 const renderLine = (line: FinancialStatementLine, currency: string, isSubLine = false, isBold = false) => {
@@ -72,7 +96,11 @@ export const StatementOfFinancialPosition: React.FC = () => {
   }
 
   // Calculate Total Equity and Liabilities
-  const totalEquityAndLiabilities = (mappedTb.equity?.total || 0) + (mappedTb.liabilities?.total || 0);
+  const equityLine = createFinancialStatementLine('equity', 'Equity', mappedTb.equity);
+  const liabilitiesLine = createFinancialStatementLine('liabilities', 'Liabilities', mappedTb.liabilities);
+  const totalEquityAndLiabilities = equityLine.total + liabilitiesLine.total;
+
+  const assetsLine = createFinancialStatementLine('assets', 'Assets', mappedTb.assets);
 
   return (
     <div className="p-4 bg-background rounded-lg shadow-sm">
@@ -80,13 +108,13 @@ export const StatementOfFinancialPosition: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             <div>
                 <h3 className="text-xl font-bold mb-4 text-accent-foreground border-b-2 pb-2">Assets</h3>
-                {renderLine(mappedTb.assets, currency, false, true)}
+                {renderLine(assetsLine, currency, false, true)}
             </div>
             <div>
                 <h3 className="text-xl font-bold mb-4 text-accent-foreground border-b-2 pb-2">Equity and Liabilities</h3>
-                {renderLine(mappedTb.equity, currency, false, true)}
+                {renderLine(equityLine, currency, false, true)}
                 <div className="mt-6">
-                  {renderLine(mappedTb.liabilities, currency, false, true)}
+                  {renderLine(liabilitiesLine, currency, false, true)}
                 </div>
                 <div className="mt-6 pt-4 border-t-2 font-bold flex justify-between items-center">
                     <span>Total Equity and Liabilities</span>
