@@ -23,8 +23,8 @@ export const CommentSidebar: React.FC<CommentSidebarProps> = ({ projectId, onClo
   };
 
   return (
-    <div className="fixed top-0 right-0 h-full w-96 bg-card border-l border-border shadow-lg z-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-border">
+    <div className="fixed top-0 right-0 h-full w-96 bg-white border-l border-gray-200 shadow-lg z-50 flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <h2 className="text-xl font-semibold">Comments for {activeThreadId}</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-5 w-5" />

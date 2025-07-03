@@ -103,7 +103,7 @@ export const Preview: React.FC = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="border-b bg-card px-6 py-4">
+      <div className="border-b bg-white px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={handleBack}>

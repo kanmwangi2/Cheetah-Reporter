@@ -22,7 +22,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="flex h-14 items-center px-4">
           <Button
             variant="ghost"
@@ -64,7 +64,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out
           md:relative md:translate-x-0 md:z-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          bg-card border-r pt-14 md:pt-0
+          bg-white border-r pt-14 md:pt-0
         `}>
           <nav className="h-full p-4">
             <div className="space-y-2">

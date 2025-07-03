@@ -400,7 +400,7 @@ export const CollaborationPanel: React.FC = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="border-b bg-card px-6 py-4">
+      <div className="border-b bg-white px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Collaboration</h1>
@@ -422,7 +422,7 @@ export const CollaborationPanel: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b bg-card">
+      <div className="border-b bg-white">
         <div className="flex">
           {[
             { id: 'collaborators', label: 'Collaborators', icon: Users },

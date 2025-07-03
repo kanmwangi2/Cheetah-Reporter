@@ -107,8 +107,11 @@ firebase init
 **When running `firebase init`, you'll be prompted with several questions. Select exactly these options:**
 
 1. **Which Firebase features do you want to set up?**
-   - Press SPACE to select: `Firestore: Deploy rules and create indexes for Firestore`
-   - Press SPACE to select: `Hosting: Configure files for Firebase Hosting and (optionally) set up GitHub Action deploys`
+   - Use ARROW KEYS to navigate, SPACE to select/deselect
+   - **ONLY SELECT THESE TWO:**
+     - `◉ Firestore: Deploy rules and create indexes for Firestore`
+     - `◉ Hosting: Configure files for Firebase Hosting and (optionally) set up GitHub Action deploys`
+   - **DO NOT SELECT:** Functions, Storage, Emulators, Data Connect, or any other services
    - Press ENTER to continue
 
 2. **Please select an option:**
@@ -134,13 +137,13 @@ npm install
 npm run build
 
 # Deploy Firestore rules and indexes first
-firebase deploy --only firestore
+firebase deploy --only "firestore"
 
 # Deploy the hosting (your built application)
-firebase deploy --only hosting
+firebase deploy --only "hosting"
 
-# OR deploy everything at once
-firebase deploy
+# OR deploy everything at once (recommended)
+firebase deploy --only "firestore,hosting"
 ```
 
 **Expected output:**
@@ -150,6 +153,8 @@ firebase deploy
 Project Console: https://console.firebase.google.com/project/your-project-id/overview
 Hosting URL: https://your-project-id.web.app
 ```
+
+**⚠️ Important for Windows/PowerShell users:** Always use quotes around comma-separated values in Firebase CLI commands.
 
 ### Step 3: Fix TypeScript Errors ✅ COMPLETED
 ~~The major type issues need to be resolved:~~
@@ -276,6 +281,38 @@ firebase use your-project-id
 
 # If Firestore rules fail to deploy:
 firebase deploy --only firestore:rules --debug
+
+# If you get "Firebase Data Connect API" error:
+# This happens when Firebase CLI tries to access unnecessary services
+# Solution: Re-run firebase init and ONLY select Firestore and Hosting
+firebase init --force
+# Then select ONLY Firestore and Hosting (deselect everything else)
+```
+
+### Firebase Data Connect API Error (HTTP 403)
+**Error:** `Firebase Data Connect API has not been used in project...`
+
+**Solution:**
+1. This error occurs when Firebase CLI tries to access Data Connect service (not needed for this project)
+2. **Re-initialize Firebase with only required services:**
+```bash
+# Force re-initialization
+firebase init --force
+
+# When prompted, select ONLY:
+# - Firestore (for database)
+# - Hosting (for web deployment)
+# DO NOT select Data Connect, Functions, or other services
+```
+
+3. **Alternative: Use targeted deployment (recommended for avoiding API issues):**
+```bash
+# Deploy only what you need (Windows PowerShell syntax)
+firebase deploy --only "firestore,hosting"
+
+# Or deploy separately
+firebase deploy --only "firestore"
+firebase deploy --only "hosting"
 ```
 
 ### Application Runtime Errors
