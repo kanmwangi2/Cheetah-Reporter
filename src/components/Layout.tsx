@@ -1,7 +1,7 @@
 import React from 'react'
 import { useUIStore } from '../store/uiStore'
 import { Button } from './ui/Button'
-import { Menu, Home, FolderOpen, FileText, Settings, Edit3, Eye, Users } from 'lucide-react'
+import { Menu, Home, FolderOpen, FileText, Settings, Edit3, Eye, Users, Download } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
 import { UserAvatar } from './UserAvatar'
 
@@ -16,6 +16,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'project-setup', label: 'New Project', icon: FolderOpen },
     { id: 'data-import', label: 'Data Import', icon: FileText },
+    { id: 'data-export', label: 'Export & Import', icon: Download },
     { id: 'report-editor', label: 'Report Editor', icon: Edit3 },
     { id: 'preview', label: 'Preview', icon: Eye },
     { id: 'collaboration', label: 'Collaboration', icon: Users },

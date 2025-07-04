@@ -5,6 +5,7 @@ import { Login } from './components/Login'
 import { Dashboard } from './components/pages/Dashboard'
 import { ProjectSetup } from './components/pages/ProjectSetup'
 import { DataImport } from './components/pages/DataImport'
+import { DataExport } from './components/pages/DataExport'
 import { ReportEditor } from './components/pages/ReportEditor'
 import { Preview } from './components/pages/Preview'
 import { UserProfile } from './components/pages/UserProfile'
@@ -56,6 +57,8 @@ function AppContent() {
         return <ProjectSetup />
       case 'data-import':
         return <DataImport />
+      case 'data-export':
+        return <DataExport />
       case 'report-editor':
         return <ReportEditor />
       case 'preview':
