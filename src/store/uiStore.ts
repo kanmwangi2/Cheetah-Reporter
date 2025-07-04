@@ -4,7 +4,7 @@ import { devtools, persist } from 'zustand/middleware'
 interface UIState {
   theme: 'light' | 'dark' | 'system'
   sidebarOpen: boolean
-  currentView: 'dashboard' | 'project-setup' | 'data-import' | 'data-export' | 'report-editor' | 'preview' | 'collaboration' | 'user-profile' | 'settings'
+  currentView: 'dashboard' | 'project-setup' | 'data-import' | 'data-export' | 'disclosures' | 'report-editor' | 'preview' | 'collaboration' | 'user-profile' | 'settings'
   activeTab: 'sfp' | 'pnl' | 'soce' | 'scf' | 'notes'
   isCommentSidebarOpen: boolean
   selectedCommentElementId: string | null

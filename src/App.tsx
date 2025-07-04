@@ -8,6 +8,7 @@ import { DataImport } from './components/pages/DataImport'
 import { DataExport } from './components/pages/DataExport'
 import { ReportEditor } from './components/pages/ReportEditor'
 import { Preview } from './components/pages/Preview'
+import { Disclosures } from './components/pages/Disclosures'
 import { UserProfile } from './components/pages/UserProfile'
 import { Settings } from './components/pages/Settings'
 import { CollaborationPanel } from './components/CollaborationPanel'
@@ -59,6 +60,8 @@ function AppContent() {
         return <DataImport />
       case 'data-export':
         return <DataExport />
+      case 'disclosures':
+        return <Disclosures />
       case 'report-editor':
         return <ReportEditor />
       case 'preview':

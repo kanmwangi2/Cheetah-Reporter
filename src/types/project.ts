@@ -9,6 +9,25 @@ export interface Project {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  disclosures?: DisclosureItem[];
+}
+
+export interface DisclosureItem {
+  id: string;
+  title: string;
+  content: string;
+  type: 'generated' | 'template' | 'custom';
+  category: string;
+  isRequired: boolean;
+  priority: 'high' | 'medium' | 'low';
+  status: 'draft' | 'review' | 'approved' | 'rejected';
+  metadata: {
+    lastModified: Date;
+    createdBy: string;
+    version: string;
+    ruleId?: string;
+    triggers?: string[];
+  };
 }
 
 export interface PeriodData {
