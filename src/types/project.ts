@@ -251,3 +251,50 @@ export interface AnalysisInsight {
   relatedMetrics: string[];
   periodIds: string[];
 }
+
+// Enhanced cash flow types
+export type CashFlowMethod = 'direct' | 'indirect';
+
+export interface WorkingCapitalComponents {
+  current: {
+    accountsReceivable: number;
+    inventory: number;
+    prepaidExpenses: number;
+    accountsPayable: number;
+    accruedLiabilities: number;
+  };
+  previous: {
+    accountsReceivable: number;
+    inventory: number;
+    prepaidExpenses: number;
+    accountsPayable: number;
+    accruedLiabilities: number;
+  };
+  changes: {
+    accountsReceivable: number;
+    inventory: number;
+    prepaidExpenses: number;
+    accountsPayable: number;
+    accruedLiabilities: number;
+  };
+}
+
+// Alias for backward compatibility and enhanced features
+export interface CashFlowData extends StatementOfCashFlowsData {
+  method?: CashFlowMethod;
+  workingCapitalComponents?: WorkingCapitalComponents;
+  nonCashAdjustments?: {
+    depreciation: number;
+    amortization: number;
+    impairment: number;
+    gainOnDisposal: number;
+    shareBasedPayments: number;
+    foreignExchangeGains: number;
+    other: number;
+  };
+  operatingActivitiesDetail?: {
+    netIncome: number;
+    adjustments: number;
+    workingCapitalChanges: number;
+  };
+}
