@@ -1,18 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/Card'
 import { Button } from '../../ui/Button'
 import { Input } from '../../ui/Input'
-import { Search, ChevronDown, ChevronRight, Trash2, Plus } from 'lucide-react'
-
-interface MappedAccount {
-  id: string
-  accountCode: string
-  accountName: string
-  debitBalance: number
-  creditBalance: number
-  mappedTo?: string
-  statementSection?: 'assets' | 'liabilities' | 'equity' | 'revenue' | 'expenses'
-}
+import { Search, ChevronDown, ChevronRight, Trash2, Plus, Wand2, CheckCircle } from 'lucide-react'
+import { generateAccountMatchingSuggestions, autoMapHighConfidenceAccounts, type AccountMatch } from '../../../lib/accountMatcher'
+import type { TrialBalanceAccount } from '../../../types/project'
 
 interface IFRSLineItem {
   id: string
@@ -25,7 +17,7 @@ interface IFRSLineItem {
 }
 
 interface AccountMappingInterfaceProps {
-  accounts: MappedAccount[]
+  accounts: TrialBalanceAccount[]
   onMappingChange: (accountId: string, lineItemId: string) => void
   onMappingRemove: (accountId: string) => void
   ifrsStandard: 'full' | 'sme'
@@ -98,16 +90,42 @@ export const AccountMappingInterface: React.FC<AccountMappingInterfaceProps> = (
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['assets', 'liabilities', 'equity']))
-  
+  const [accountMappings, setAccountMappings] = useState<Record<string, string>>({})
+  const [suggestions, setSuggestions] = useState<Map<string, AccountMatch[]>>(new Map())
+
   const ifrsStructure = getIFRSStructure(ifrsStandard)
-  
-  const filteredAccounts = accounts.filter(account => 
+
+  // Generate smart suggestions on component mount and when accounts change
+  useEffect(() => {
+    const newSuggestions = generateAccountMatchingSuggestions(accounts)
+    setSuggestions(newSuggestions)
+
+    // Auto-apply high confidence mappings
+    const autoMappings = autoMapHighConfidenceAccounts(accounts, 0.85)
+    setAccountMappings(prev => ({ ...prev, ...autoMappings }))
+    
+    // Apply auto mappings via callback
+    Object.entries(autoMappings).forEach(([accountId, lineItemId]) => {
+      onMappingChange(accountId, lineItemId)
+    })
+  }, [accounts, onMappingChange])
+
+  const handleAutoMap = () => {
+    const autoMappings = autoMapHighConfidenceAccounts(accounts, 0.7)
+    setAccountMappings(prev => ({ ...prev, ...autoMappings }))
+    
+    Object.entries(autoMappings).forEach(([accountId, lineItemId]) => {
+      onMappingChange(accountId, lineItemId)
+    })
+  }
+
+  const filteredAccounts = accounts.filter(account =>
     account.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    account.accountCode.toLowerCase().includes(searchTerm.toLowerCase())
+    account.accountId.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const unmappedAccounts = filteredAccounts.filter(account => !account.mappedTo)
-  const mappedAccounts = filteredAccounts.filter(account => account.mappedTo)
+  const unmappedAccounts = filteredAccounts.filter(account => !accountMappings[account.accountId])
+  const mappedAccounts = filteredAccounts.filter(account => accountMappings[account.accountId])
 
   const toggleSection = (sectionId: string) => {
     const newExpanded = new Set(expandedSections)
@@ -122,8 +140,8 @@ export const AccountMappingInterface: React.FC<AccountMappingInterfaceProps> = (
   const renderIFRSLineItem = (item: IFRSLineItem) => {
     const isExpanded = expandedSections.has(item.id)
     const hasChildren = ifrsStructure.some(child => child.parentId === item.id)
-    const mappedAccountsForItem = mappedAccounts.filter(acc => acc.mappedTo === item.id)
-    const totalMapped = mappedAccountsForItem.reduce((sum, acc) => sum + (acc.debitBalance || acc.creditBalance || 0), 0)
+    const mappedAccountsForItem = mappedAccounts.filter(acc => accountMappings[acc.accountId] === item.id)
+    const totalMapped = mappedAccountsForItem.reduce((sum, acc) => sum + Math.abs(acc.debit || acc.credit || 0), 0)
 
     return (
       <div key={item.id} className="border-b border-gray-100 dark:border-gray-800">
@@ -159,14 +177,21 @@ export const AccountMappingInterface: React.FC<AccountMappingInterfaceProps> = (
             {mappedAccountsForItem.length > 0 && (
               <div className="mt-1 space-y-1">
                 {mappedAccountsForItem.map(account => (
-                  <div key={account.id} className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-xs">
-                    <span>{account.accountCode} - {account.accountName}</span>
+                  <div key={account.accountId} className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-xs">
+                    <span>{account.accountId} - {account.accountName}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-600 dark:text-gray-400">
-                        {(account.debitBalance || account.creditBalance || 0).toLocaleString()}
+                        {Math.abs(account.debit || account.credit || 0).toLocaleString()}
                       </span>
                       <button
-                        onClick={() => onMappingRemove(account.id)}
+                        onClick={() => {
+                          setAccountMappings(prev => {
+                            const newMappings = { ...prev }
+                            delete newMappings[account.accountId]
+                            return newMappings
+                          })
+                          onMappingRemove(account.accountId)
+                        }}
                         className="text-red-500 hover:text-red-700"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -197,9 +222,22 @@ export const AccountMappingInterface: React.FC<AccountMappingInterfaceProps> = (
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Trial Balance Accounts</span>
-            <span className="text-sm font-normal text-gray-600 dark:text-gray-400">
-              {unmappedAccounts.length} unmapped
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-normal text-gray-600 dark:text-gray-400">
+                {unmappedAccounts.length} unmapped
+              </span>
+              {unmappedAccounts.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoMap}
+                  className="flex items-center gap-1"
+                >
+                  <Wand2 className="h-3 w-3" />
+                  Auto Map
+                </Button>
+              )}
+            </div>
           </CardTitle>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -213,34 +251,57 @@ export const AccountMappingInterface: React.FC<AccountMappingInterfaceProps> = (
         </CardHeader>
         <CardContent className="p-0">
           <div className="h-[450px] overflow-auto">
-            {unmappedAccounts.map(account => (
-              <div
-                key={account.id}
-                className="p-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-move"
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('application/json', JSON.stringify({
-                    accountId: account.id,
-                    accountData: account
-                  }))
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-sm">{account.accountCode}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{account.accountName}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">
-                      {(account.debitBalance || account.creditBalance || 0).toLocaleString()}
+            {unmappedAccounts.map(account => {
+              const accountSuggestions = suggestions.get(account.accountId) || []
+              const bestSuggestion = accountSuggestions[0]
+              
+              return (
+                <div
+                  key={account.accountId}
+                  className="p-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-move relative"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('application/json', JSON.stringify({
+                      accountId: account.accountId,
+                      accountData: account
+                    }))
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{account.accountId}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{account.accountName}</div>
+                      {bestSuggestion && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <span className="text-xs text-green-600 dark:text-green-400">
+                            Suggested: {ifrsStructure.find(item => item.id === bestSuggestion.ifrsLineItemId)?.name} 
+                            ({Math.round(bestSuggestion.confidence * 100)}%)
+                          </span>
+                          <button
+                            onClick={() => {
+                              setAccountMappings(prev => ({ ...prev, [account.accountId]: bestSuggestion.ifrsLineItemId }))
+                              onMappingChange(account.accountId, bestSuggestion.ifrsLineItemId)
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-800 underline ml-1"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {account.debitBalance ? 'DR' : 'CR'}
+                    <div className="text-right">
+                      <div className="text-sm font-medium">
+                        {Math.abs(account.debit || account.credit || 0).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {(account.debit || 0) > (account.credit || 0) ? 'DR' : 'CR'}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
             
             {unmappedAccounts.length === 0 && (
               <div className="p-8 text-center text-gray-500">
@@ -286,6 +347,7 @@ export const AccountMappingInterface: React.FC<AccountMappingInterfaceProps> = (
               if (lineItemElement) {
                 const lineItemId = lineItemElement.getAttribute('data-line-item-id')
                 if (lineItemId) {
+                  setAccountMappings(prev => ({ ...prev, [data.accountId]: lineItemId }))
                   onMappingChange(data.accountId, lineItemId)
                 }
               }

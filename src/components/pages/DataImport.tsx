@@ -340,6 +340,16 @@ export const DataImport: React.FC = () => {
     </Card>
   )
 
+  // Convert MappedAccount to TrialBalanceAccount for the AccountMappingInterface
+  const convertToTrialBalanceAccounts = (accounts: MappedAccount[]) => {
+    return accounts.map(account => ({
+      accountId: account.id,
+      accountName: account.accountName,
+      debit: account.debitBalance,
+      credit: account.creditBalance
+    }))
+  }
+
   const renderStep4 = () => (
     <Card>
       <CardHeader>
@@ -350,7 +360,7 @@ export const DataImport: React.FC = () => {
       </CardHeader>
       <CardContent>
         <AccountMappingInterface
-          accounts={mappedAccounts}
+          accounts={convertToTrialBalanceAccounts(mappedAccounts)}
           onMappingChange={handleAccountMappingChange}
           onMappingRemove={handleAccountMappingRemove}
           ifrsStandard={currentProject?.ifrsStandard || 'full'}
