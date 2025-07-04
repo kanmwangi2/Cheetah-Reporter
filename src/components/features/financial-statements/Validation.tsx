@@ -3,15 +3,18 @@ import { useProjectStore } from '@/store/projectStore';
 import type { ValidationResult } from '@/types/project';
 import {
   validateNegativeCash,
-  validateSuspenseAccounts,
-  validateDuplicateAccountCodes,
-  validateMissingAccountDetails,
-  validateUnmappedAccounts,
-  validateAccountCodeHierarchy,
-  validateLargeAccountMovements,
-  validateSfpBalanceSimple,
-  validateTrialBalanceSumSimple,
+  validateSfpBalance,
+  validateDebitCreditRules,
 } from '@/lib/validation';
+import {
+  validateAccountingEquation,
+  validateTrialBalanceBalance,
+  validateChartOfAccountsStructure,
+  validateRequiredIfrsLineItems,
+  validateSuspenseAccounts,
+  validateLargeAccountMovements,
+  validateAccountMappingConsistency,
+} from '@/lib/trialBalanceValidator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/components/features/financial-statements/financialStatementUtils';
@@ -36,20 +39,24 @@ const Validation: React.FC = () => {
     );
   }
 
+  // Get all other periods for comparison
+  const otherPeriods = currentProject?.periods.filter(p => p.id !== activePeriodId) || [];
+
   // Group validations into two categories
   const trialBalanceIntegrityChecks = [
-    validateTrialBalanceSumSimple(activePeriod),
-    validateDuplicateAccountCodes(activePeriod),
-    validateMissingAccountDetails(activePeriod),
-    validateUnmappedAccounts(activePeriod),
-    validateAccountCodeHierarchy(activePeriod),
-    validateLargeAccountMovements(activePeriod),
-    validateSuspenseAccounts(mappedTrialBalance), // This checks for suspense accounts in mapped data
+    validateTrialBalanceBalance(activePeriod),
+    validateChartOfAccountsStructure(activePeriod),
+    validateLargeAccountMovements(activePeriod, otherPeriods),
+    validateSuspenseAccounts(mappedTrialBalance),
+    validateDebitCreditRules(mappedTrialBalance),
   ].filter(Boolean) as ValidationResult[];
 
   const financialStatementConsistencyChecks = [
-    validateSfpBalanceSimple(mappedTrialBalance),
+    validateAccountingEquation(mappedTrialBalance),
+    validateSfpBalance(mappedTrialBalance),
     validateNegativeCash(mappedTrialBalance),
+    validateRequiredIfrsLineItems(mappedTrialBalance),
+    validateAccountMappingConsistency(mappedTrialBalance),
   ].filter(Boolean) as ValidationResult[];
 
 
@@ -126,11 +133,11 @@ const Validation: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {result.details.anomalies.map((acc: any, index: number) => (
+                    {result.details.anomalies.map((acc: { accountId: string; accountName: string; balance: number }, index: number) => (
                       <TableRow key={index}>
                         <TableCell>{acc.accountId}</TableCell>
                         <TableCell>{acc.accountName}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(parseFloat(acc.balance), currentProject?.currency || 'USD')}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(acc.balance, currentProject?.currency || 'USD')}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -198,11 +205,11 @@ const Validation: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {result.details.accountsWithMissingDetails.map((acc: any, index: number) => (
+                  {result.details.accountsWithMissingDetails.map((acc: { accountId: string; accountName: string; balance: number }, index: number) => (
                     <TableRow key={index}>
                       <TableCell>{acc.accountId || <span className="text-red-500">Missing</span>}</TableCell>
                       <TableCell>{acc.accountName || <span className="text-red-500">Missing</span>}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(parseFloat(acc.balance), currentProject?.currency || 'USD')}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(acc.balance, currentProject?.currency || 'USD')}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

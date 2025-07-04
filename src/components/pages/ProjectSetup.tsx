@@ -46,6 +46,11 @@ export const ProjectSetup: React.FC = () => {
     const initialPeriodData = {
       name: `Period ending ${formData.reportingDate}`,
       reportingDate: new Date(formData.reportingDate),
+      periodType: 'annual' as const,
+      fiscalYear: new Date(formData.reportingDate).getFullYear(),
+      fiscalPeriod: 1,
+      isComparative: false,
+      status: 'draft' as const,
       trialBalance: {
         rawData: [],
         mappings: {},
