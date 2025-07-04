@@ -151,42 +151,42 @@ The application will be a Single Page Application (SPA) with different views ren
 - **Template Data:** This saves the account mapping structure, selected disclosures, custom notes (with placeholder text/values), and formatting
 - **New Project from Template:** When creating a new project, the user can select from their saved templates, which pre-configures the entire report structure, saving significant setup time
 
-### Feature 5: Algorithmic Financial Analysis & Validation
-**Description:** Use proven mathematical algorithms and business rules to provide reliable insights and validation.
+### Feature 5: Financial Analysis & Validation
+**Description:** Use mathematical algorithms and business rules to provide reliable insights and validation.
 
 **Implementation:**
-- **Rule-Based Anomaly Detection:** Predefined business rules to flag unusual account movements, ratio outliers, or data inconsistencies (e.g., negative cash, impossible ratios)
-- **Standards-Based Disclosure Engine:** Rule-based system that suggests IFRS disclosures based on account balances, thresholds, and company characteristics
-- **Comprehensive Ratio Analysis:** Calculate and display 50+ financial ratios with historical comparisons and industry-standard benchmarks
-- **Variance Analysis Tools:** Mathematical algorithms to identify and highlight significant changes between periods with customizable materiality thresholds
-- **Template-Based Note Generation:** Pre-built disclosure templates that auto-populate with relevant financial data based on account mappings
+- **Rule-Based Anomaly Detection:** Flag unusual account movements, ratio outliers, or data inconsistencies
+- **Standards-Based Disclosure Engine:** Suggest IFRS disclosures based on account balances and thresholds
+- **Ratio Analysis:** Calculate and display key financial ratios with trend analysis
+- **Variance Analysis Tools:** Identify and highlight significant changes between periods
+- **Template-Based Note Generation:** Auto-populate disclosure templates with relevant financial data
 
-### Feature 6: Advanced Reporting & Analytics
+### Feature 6: Reporting & Analytics
 **Description:** Comprehensive reporting capabilities beyond basic financial statements.
 
 **Implementation:**
-- **Multi-Period Comparisons:** Side-by-side comparison of up to 5 years of financial data
+- **Multi-Period Comparisons:** Side-by-side comparison of multiple years of financial data
 - **Variance Analysis:** Automated calculation and highlighting of significant variances between periods
 - **Trend Analysis:** Visual charts showing key metrics trends over time
-- **Executive Dashboard:** High-level KPI dashboard for C-suite executives with drill-down capabilities
-- **Custom Report Builder:** Drag-and-drop interface to create custom financial reports and presentations
+- **Executive Dashboard:** High-level KPI dashboard with drill-down capabilities
+- **Custom Report Builder:** Interface to create custom financial reports and presentations
 
-### Feature 7: Enhanced Data Integration & Automation
-**Description:** Streamline data collection and reduce manual entry through reliable automated processes.
+### Feature 7: Data Integration & Automation
+**Description:** Streamline data collection and reduce manual entry through automated processes.
 
 **Implementation:**
-- **Pattern Recognition for Data Import:** Algorithm-based parsing to automatically detect and map common CSV formats and account structures
-- **Multi-Currency Support:** Automatic currency conversion with real-time exchange rates from reliable financial data providers
-- **Recurring Journal Entries:** Template and automate recurring adjustments and reclassifications based on predefined rules
-- **Data Validation Engine:** Comprehensive business rules to automatically validate data integrity and flag inconsistencies
-- **Bulk Import Tools:** Excel/Google Sheets add-ins for seamless data transfer with intelligent column mapping
+- **Pattern Recognition for Data Import:** Algorithm-based parsing to automatically detect and map common CSV formats
+- **Multi-Currency Support:** Automatic currency conversion with exchange rates
+- **Recurring Journal Entries:** Template and automate recurring adjustments and reclassifications
+- **Data Validation Engine:** Business rules to automatically validate data integrity and flag inconsistencies
+- **Bulk Import Tools:** Enhanced import capabilities with intelligent column mapping
 
-### Feature 8: Regulatory Compliance & Updates
+### Feature 8: Regulatory Compliance
 **Description:** Stay current with evolving IFRS standards and regulatory requirements.
 
 **Implementation:**
 - **Standards Update Notifications:** Automatic alerts when new IFRS standards are released
-- **Compliance Checklist Engine:** Dynamic checklists that update based on applicable standards and company characteristics
+- **Compliance Checklist Engine:** Dynamic checklists that update based on applicable standards
 - **Impact Assessment Tools:** Analyze how new standards affect existing financial statements
 
 ## 6. Advanced Business Features
@@ -199,39 +199,35 @@ A comprehensive module to handle group financial statements:
 - Support for different consolidation methods (full consolidation, equity method)
 - Multi-currency consolidation with translation adjustments
 
-### Advanced Data Export & Compliance
-For regulatory compliance and data portability:
-- Export to multiple formats (PDF, Excel, CSV)
-- Maintain data integrity across export formats
-- Support for standard financial reporting layouts
+## 7. User Workflow Examples
 
-## 7. Enhanced User Workflow Examples
+### Scenario 1: Quarterly Reporting
+1. **Smart Data Import:** Manager uploads trial balance, validation flags potential inconsistencies
+2. **Automated Disclosure Suggestions:** System suggests relevant IFRS disclosures based on account balances
+3. **Collaborative Review:** CFO reviews and provides feedback through comment system
+4. **Real-time Analytics:** Executive dashboard shows ratio changes as adjustments are made
 
-### Scenario 1: Algorithm-Assisted Quarterly Reporting
-1. **Smart Data Import:** Manager uploads trial balance, rule-based validation immediately flags 3 potential data inconsistencies
-2. **Automated Disclosure Suggestions:** System suggests relevant IFRS disclosures based on account balances and predefined thresholds
-3. **Collaborative Review:** CFO receives mobile notification, reviews on tablet during commute
-5. **Real-time Analytics:** Executive dashboard shows ratio changes instantly as adjustments are made using mathematical calculations
-
-### Scenario 2: Year-End Consolidation Workflow
+### Scenario 2: Year-End Consolidation
 1. **Multi-Entity Setup:** Parent company creates project, invites subsidiary accountants as editors
-2. **Parallel Processing:** 5 subsidiaries work simultaneously on their individual statements
+2. **Parallel Processing:** Multiple subsidiaries work simultaneously on their statements
 3. **Automated Consolidation:** System eliminates intercompany transactions and calculates goodwill
-4. **Currency Translation:** Real-time FX rates applied to foreign subsidiaries
-5. **Group Review:** Group CFO reviews consolidated statements with variance analysis vs. budget
+4. **Currency Translation:** Multi-currency support with exchange rate management
+5. **Group Review:** Group CFO reviews consolidated statements with variance analysis
 6. **Standards Compliance:** One-click generation of compliant financial statements
 
 ### Scenario 3: Template-Driven Efficiency
-1. **Template Selection:** New client setup using "Manufacturing Company - IFRS SME" template
+1. **Template Selection:** New client setup using industry-specific template
 2. **Automated Mapping:** System suggests account mappings based on template structure
 3. **Industry Standards:** System compares ratios to standard industry metrics
-4. **Automated Disclosures:** 80% of standard notes pre-populated based on trial balance data and templates
-5. **Quality Assurance:** Built-in validation rules catch common errors before review stage
+4. **Automated Disclosures:** Standard notes pre-populated based on trial balance data
+5. **Quality Assurance:** Built-in validation rules catch common errors before review
 6. **Client Review:** Secure client access to view draft statements and provide feedback
 
 
+## 8. Implementation Guide
+
 ### Project Setup
-You are to build a React application using Vite, Tailwind CSS, Zustand, and Firebase.
+Build a React application using Vite, Tailwind CSS, Zustand, and Firebase.
 
 **Initial Setup Commands:**
 ```bash
@@ -245,7 +241,7 @@ npm install lucide-react react-hook-form papaparse
 npm install jspdf html2canvas
 ```
 
-### Firebase/Firestore Data Model (Updated)
+### Firebase/Firestore Data Model
 
 #### `projects` collection:
 ```javascript
@@ -256,7 +252,9 @@ npm install jspdf html2canvas
   collaborators: { [userId: string]: 'admin' | 'editor' | 'viewer' },
   trialBalance: { rawData: object[], mappings: object },
   notes: { [noteId: string]: { content: string, order: number } },
-  // ...etc
+  createdAt: timestamp,
+  updatedAt: timestamp,
+  createdBy: string
 }
 ```
 
@@ -265,59 +263,34 @@ npm install jspdf html2canvas
 - **`comments`:** Documents with fields elementId, threadId, userId, text, status
 
 #### `templates` collection:
-To store user-generated templates.
+Store user-generated templates for reuse across projects.
 
-### Component Structure (Updated)
+### Component Structure
 
-Add components for new features:
-- **`features/collaboration/`:** InviteUserModal.jsx, UserRolesManager.jsx
-- **`features/review/`:** Comment.jsx, CommentSidebar.jsx, AuditTrailViewer.jsx
+**Core Components:**
+- **`components/pages/`:** Dashboard, ProjectSetup, DataImport, ReportEditor, Preview
+- **`components/features/`:** Financial statements, notes, comments, collaboration, templates
+- **`components/ui/`:** Reusable UI components (buttons, inputs, modals, etc.)
+
+**New Feature Components:**
+- **`features/collaboration/`:** InviteUserModal, UserRolesManager
+- **`features/review/`:** CommentSidebar, AuditTrailViewer
+- **`features/data-import/`:** AccountMappingInterface
 
 ### State Management (Zustand)
-- **`useProjectStore`:** Will need actions to handle real-time data from Firestore listeners for comments and audit trail entries
-- **`useUIStore`:** As previously defined
+- **`useProjectStore`:** Handle project data and real-time Firestore listeners
+- **`useUIStore`:** Manage UI state (current view, sidebar, theme)
+- **`useAuthStore`:** User authentication and profile management
 
-### Core Logic Implementation (Updated)
+### Core Implementation Logic
 
-- **Real-time Listeners:** Use `onSnapshot` extensively to listen for changes to the project document, as well as the comments and audit_trail sub-collections, updating the Zustand store accordingly
+- **Real-time Listeners:** Use Firestore `onSnapshot` for live collaboration
+- **Permissions:** Check user roles before rendering edit components
+- **Commenting:** Store comments in Firestore sub-collections
+- **Templates:** Strip transactional data when saving templates
+- **Validation:** Implement business rules for financial data integrity
 
-- **Permissions:** Before rendering any component that allows editing or performing an action, check the current user's role from `project.collaborators` to enforce permissions
-
-- **Commenting Logic:** When a user adds a comment, create a new document in the comments sub-collection. The UI will render comments by fetching and displaying documents from this collection
-
-- **Template Logic:** The "Save as Template" function should read the active project's structure (mappings, notes, etc.), strip out the transactional values, and save this clean structure as a new document in the templates collection
-
-- **Algorithmic Validation Logic:** Implement comprehensive business rules for data validation, ratio analysis, and anomaly detection using mathematical algorithms and predefined thresholds
-
-## 9. Performance & Scalability Enhancements
-
-### Caching & Optimization
-- **Intelligent Caching:** Cache frequently accessed financial data and calculations
-- **Lazy Loading:** Load financial statement sections on-demand to improve initial page load
-- **Background Processing:** Process large trial balance imports and PDF generation in the background
-- **CDN Integration:** Serve static assets from global CDN for faster loading times
-
-### Scalability Features
-- **Multi-Tenant Architecture:** Support for accounting firms managing multiple client databases
-- **Load Balancing:** Automatic scaling to handle peak reporting periods (quarter-end, year-end)
-- **Database Optimization:** Efficient indexing and querying for large datasets
-- **Real-time Sync:** Instant synchronization across all user sessions and devices
-
-## 10. Integration & Export Features
-
-### Export & Data Portability
-- **Multiple Export Formats:** PDF, Excel, CSV, and Word formats
-- **Custom Report Layouts:** Configurable report templates and formatting
-- **Data Export Tools:** Export trial balance, mappings, and financial data
-- **Backup & Restore:** Complete project backup and restoration capabilities
-
-## 11. User Experience & Performance
-
-### Performance & Scalability
-- **Intelligent Caching:** Cache frequently accessed financial data and calculations
-- **Lazy Loading:** Load financial statement sections on-demand to improve initial page load
-- **Background Processing:** Process large trial balance imports and PDF generation in the background
-- **Real-time Sync:** Instant synchronization across all user sessions and devices
+## 9. User Experience & Performance
 
 ### Core User Experience
 - **Dark/Light Mode:** Full theme support with user preferences
@@ -325,26 +298,37 @@ Add components for new features:
 - **Offline Capabilities:** Basic offline functionality for viewing and editing
 - **Real-time Collaboration:** Live updates and collaborative editing
 
-## 12. Business Rules & Validation Engine
+### Performance & Scalability
+- **Intelligent Caching:** Cache frequently accessed financial data and calculations
+- **Lazy Loading:** Load financial statement sections on-demand to improve initial page load
+- **Background Processing:** Process large trial balance imports and PDF generation in the background
+- **Real-time Sync:** Instant synchronization across all user sessions and devices
+- **Database Optimization:** Efficient indexing and querying for large datasets
+
+### Export & Data Portability
+- **Multiple Export Formats:** PDF, Excel, CSV, and Word formats
+- **Custom Report Layouts:** Configurable report templates and formatting
+- **Data Export Tools:** Export trial balance, mappings, and financial data
+- **Backup & Restore:** Complete project backup and restoration capabilities
+
+## 10. Business Rules & Validation Engine
 
 ### Core Validation Framework
-**Core Algorithms:**
+**Validation Algorithms:**
 - **Balance Sheet Validation:** Ensure Assets = Liabilities + Equity with configurable tolerance levels
 - **Cash Flow Reconciliation:** Automatic reconciliation between indirect cash flow method and balance sheet movements
-- **Ratio Analysis Engine:** 20+ pre-programmed financial ratios with trend analysis
+- **Ratio Analysis Engine:** Pre-programmed financial ratios with trend analysis
 - **Materiality Calculations:** Basic materiality threshold calculations based on established standards
-- **Variance Detection:** Basic algorithms to identify significant period-over-period changes
+- **Variance Detection:** Algorithms to identify significant period-over-period changes
 
-### Data Validation Framework
-**Validation Rules:**
+### Data Validation Rules
 - **Account Code Validation:** Ensure all accounts follow proper coding standards and hierarchies
 - **Debit/Credit Balance Rules:** Validate that account types have appropriate balance types
 - **Inter-Statement Consistency:** Cross-reference figures between financial statements for accuracy
 - **IFRS Compliance Checks:** Built-in rules to ensure compliance with basic IFRS requirements
 - **Currency Validation:** Ensure multi-currency transactions are properly converted and presented
 
-### Basic Automation
-**Smart Features:**
+### Smart Automation Features
 - **Account Mapping:** Basic account matching for common account names
 - **Template Application:** Apply saved templates to new projects
 - **Standard Disclosures:** Pre-built disclosure templates with basic auto-population

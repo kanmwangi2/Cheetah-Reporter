@@ -3,11 +3,22 @@ import { useProjectStore } from '../../store/projectStore'
 import { useUIStore } from '../../store/uiStore'
 import { Button } from '../ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card'
+import { AccountMappingInterface } from '../features/data-import/AccountMappingInterface'
 import Papa from 'papaparse'
 import { Upload, ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react'
 
 interface CSVRow {
   [key: string]: string
+}
+
+interface MappedAccount {
+  id: string
+  accountCode: string
+  accountName: string
+  debitBalance: number
+  creditBalance: number
+  mappedTo?: string
+  statementSection?: 'assets' | 'liabilities' | 'equity' | 'revenue' | 'expenses'
 }
 
 export const DataImport: React.FC = () => {
@@ -18,6 +29,8 @@ export const DataImport: React.FC = () => {
   const [csvData, setCsvData] = useState<CSVRow[]>([])
   const [csvHeaders, setCsvHeaders] = useState<string[]>([])
   const [columnMappings, setColumnMappings] = useState<{[key: string]: string}>({})
+  const [accountMappings, setAccountMappings] = useState<{[accountId: string]: { statement: string; lineItem: string }}>({})
+  const [mappedAccounts, setMappedAccounts] = useState<MappedAccount[]>([])
   const [validationResults, setValidationResults] = useState<{
     isValid: boolean
     totalDebits: number
@@ -93,7 +106,16 @@ export const DataImport: React.FC = () => {
     })
 
     if (isBalanced && errors.length === 0) {
-      setCurrentStep(3)
+      // Convert CSV data to MappedAccount format for step 4
+      const accounts: MappedAccount[] = csvData.map((row, index) => ({
+        id: `account-${index}`,
+        accountCode: row[columnMappings.accountCode] || '',
+        accountName: row[columnMappings.accountName] || '',
+        debitBalance: parseFloat(row[columnMappings.debit] || '0') || 0,
+        creditBalance: parseFloat(row[columnMappings.credit] || '0') || 0,
+      }))
+      setMappedAccounts(accounts)
+      setCurrentStep(4)
     }
   }
 
@@ -101,26 +123,102 @@ export const DataImport: React.FC = () => {
     if (currentStep === 2) {
       validateTrialBalance()
     } else if (currentStep === 3) {
+      // Move to account mapping step
+      setCurrentStep(4)
+    } else if (currentStep === 4) {
       // Save trial balance data and proceed to report editor
       if (currentProject && activePeriodId) {
-        // Process and save trial balance entries
-        const trialBalanceEntries = csvData.map(row => ({
-          accountId: row[columnMappings.accountCode] || '',
-          accountName: row[columnMappings.accountName] || '',
-          debit: parseFloat(row[columnMappings.debit] || '0') || 0,
-          credit: parseFloat(row[columnMappings.credit] || '0') || 0,
+        // Process and save trial balance entries with mappings
+        const trialBalanceEntries = mappedAccounts.map(account => ({
+          accountId: account.accountCode,
+          accountName: account.accountName,
+          debit: account.debitBalance,
+          credit: account.creditBalance,
+          mappedTo: account.mappedTo || '',
         }))
 
         // Update the active period's trial balance
         await updatePeriodTrialBalance(activePeriodId, {
           rawData: trialBalanceEntries,
-          mappings: {}
+          mappings: accountMappings
         })
         
         setCurrentView('report-editor')
       }
     }
   }
+
+  const handleAccountMappingChange = (accountId: string, lineItemId: string) => {
+    // Find the IFRS line item to get statement section
+    const ifrsStructure = getIFRSStructure()
+    const lineItem = ifrsStructure.find(item => item.id === lineItemId)
+    
+    if (lineItem) {
+      setAccountMappings(prev => ({
+        ...prev,
+        [accountId]: {
+          statement: lineItem.section,
+          lineItem: lineItemId
+        }
+      }))
+      
+      // Update the mapped accounts
+      setMappedAccounts(prev => prev.map(account => 
+        account.id === accountId 
+          ? { ...account, mappedTo: lineItemId, statementSection: lineItem.section }
+          : account
+      ))
+    }
+  }
+
+  const handleAccountMappingRemove = (accountId: string) => {
+    setAccountMappings(prev => {
+      const newMappings = { ...prev }
+      delete newMappings[accountId]
+      return newMappings
+    })
+    
+    // Update the mapped accounts
+    setMappedAccounts(prev => prev.map(account => 
+      account.id === accountId 
+        ? { ...account, mappedTo: undefined, statementSection: undefined }
+        : account
+    ))
+  }
+
+  // Helper function to get IFRS structure (simplified version)
+  const getIFRSStructure = () => [
+    { id: 'assets', section: 'assets' as const },
+    { id: 'current-assets', section: 'assets' as const },
+    { id: 'cash', section: 'assets' as const },
+    { id: 'trade-receivables', section: 'assets' as const },
+    { id: 'inventory', section: 'assets' as const },
+    { id: 'prepayments', section: 'assets' as const },
+    { id: 'non-current-assets', section: 'assets' as const },
+    { id: 'ppe', section: 'assets' as const },
+    { id: 'intangibles', section: 'assets' as const },
+    { id: 'investments', section: 'assets' as const },
+    { id: 'liabilities', section: 'liabilities' as const },
+    { id: 'current-liabilities', section: 'liabilities' as const },
+    { id: 'trade-payables', section: 'liabilities' as const },
+    { id: 'short-term-borrowings', section: 'liabilities' as const },
+    { id: 'provisions-current', section: 'liabilities' as const },
+    { id: 'non-current-liabilities', section: 'liabilities' as const },
+    { id: 'long-term-borrowings', section: 'liabilities' as const },
+    { id: 'provisions-non-current', section: 'liabilities' as const },
+    { id: 'equity', section: 'equity' as const },
+    { id: 'share-capital', section: 'equity' as const },
+    { id: 'retained-earnings', section: 'equity' as const },
+    { id: 'other-reserves', section: 'equity' as const },
+    { id: 'revenue', section: 'revenue' as const },
+    { id: 'revenue-sales', section: 'revenue' as const },
+    { id: 'other-income', section: 'revenue' as const },
+    { id: 'expenses', section: 'expenses' as const },
+    { id: 'cost-of-sales', section: 'expenses' as const },
+    { id: 'admin-expenses', section: 'expenses' as const },
+    { id: 'selling-expenses', section: 'expenses' as const },
+    { id: 'finance-costs', section: 'expenses' as const },
+  ]
 
   const handleBack = () => {
     if (currentStep === 1) {
@@ -235,9 +333,28 @@ export const DataImport: React.FC = () => {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            {csvData.length} accounts imported successfully. You can now proceed to the report editor.
+            {csvData.length} accounts imported successfully. Click Next to map accounts to financial statement line items.
           </p>
         </div>
+      </CardContent>
+    </Card>
+  )
+
+  const renderStep4 = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Map Accounts to Financial Statements</CardTitle>
+        <CardDescription>
+          Assign your trial balance accounts to the appropriate IFRS financial statement line items
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <AccountMappingInterface
+          accounts={mappedAccounts}
+          onMappingChange={handleAccountMappingChange}
+          onMappingRemove={handleAccountMappingRemove}
+          ifrsStandard={currentProject?.ifrsStandard || 'full'}
+        />
       </CardContent>
     </Card>
   )
@@ -281,6 +398,7 @@ export const DataImport: React.FC = () => {
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}
+        {currentStep === 4 && renderStep4()}
 
         {/* Navigation */}
         {currentStep > 1 && (
@@ -289,7 +407,7 @@ export const DataImport: React.FC = () => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            {currentStep < 3 ? (
+            {currentStep < 4 ? (
               <Button onClick={handleNext} disabled={currentStep === 2 && !validationResults.isValid}>
                 Next
                 <ArrowRight className="ml-2 h-4 w-4" />
