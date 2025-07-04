@@ -250,17 +250,21 @@ export const DataImport: React.FC = () => {
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Import Trial Balance</h1>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <Upload className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
+            <div>            <h1 className="text-3xl font-bold tracking-tight">Import Trial Balance</h1>
             <p className="text-muted-foreground">
-              {currentProject?.companyName} - Step {currentStep} of 3
+              {currentProject?.companyName} - Step {currentStep} of 4
             </p>
+            </div>
           </div>
         </div>
 
         {/* Steps indicator */}
         <div className="flex items-center space-x-4">
-          {[1, 2, 3].map(step => (
+          {[1, 2, 3, 4].map(step => (
             <div key={step} className="flex items-center">
               <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
@@ -268,7 +272,7 @@ export const DataImport: React.FC = () => {
               `}>
                 {currentStep > step ? <Check className="h-4 w-4" /> : step}
               </div>
-              {step < 3 && <div className={`h-px w-16 ${currentStep > step ? 'bg-primary' : 'bg-muted'}`} />}
+              {step < 4 && <div className={`h-px w-16 ${currentStep > step ? 'bg-primary' : 'bg-muted'}`} />}
             </div>
           ))}
         </div>

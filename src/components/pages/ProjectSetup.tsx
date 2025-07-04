@@ -4,7 +4,7 @@ import { useUIStore } from '../../store/uiStore'
 import { Button } from '../ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card'
 import { Input } from '../ui/Input'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, FolderOpen } from 'lucide-react'
 import { TemplateSelector } from '../features/templates/TemplateSelector'
 import { useTemplateStore } from '../../store/templateStore'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
@@ -16,7 +16,7 @@ export const ProjectSetup: React.FC = () => {
   const [formData, setFormData] = useState({
     companyName: '',
     reportingDate: '',
-    currency: 'USD',
+    currency: 'RWF',
     ifrsStandard: 'full' as 'full' | 'sme'
   })
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(undefined)
@@ -72,11 +72,16 @@ export const ProjectSetup: React.FC = () => {
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Create New Project</h1>
-            <p className="text-muted-foreground">
-              Set up your financial statement preparation project
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <FolderOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Create New Project</h1>
+              <p className="text-muted-foreground">
+                Set up your financial statement preparation project
+              </p>
+            </div>
           </div>
         </div>
 
@@ -139,11 +144,63 @@ export const ProjectSetup: React.FC = () => {
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     required
                   >
+                    <option value="RWF">RWF - Rwandan Franc</option>
                     <option value="USD">USD - US Dollar</option>
                     <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - British Pound</option>
-                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="GBP">GBP - British Pound Sterling</option>
+                    <option value="JPY">JPY - Japanese Yen</option>
                     <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="CHF">CHF - Swiss Franc</option>
+                    <option value="CNY">CNY - Chinese Yuan</option>
+                    <option value="SEK">SEK - Swedish Krona</option>
+                    <option value="NZD">NZD - New Zealand Dollar</option>
+                    <option value="NOK">NOK - Norwegian Krone</option>
+                    <option value="ZAR">ZAR - South African Rand</option>
+                    <option value="KES">KES - Kenyan Shilling</option>
+                    <option value="UGX">UGX - Ugandan Shilling</option>
+                    <option value="TZS">TZS - Tanzanian Shilling</option>
+                    <option value="ETB">ETB - Ethiopian Birr</option>
+                    <option value="XAF">XAF - Central African CFA Franc</option>
+                    <option value="XOF">XOF - West African CFA Franc</option>
+                    <option value="NGN">NGN - Nigerian Naira</option>
+                    <option value="GHS">GHS - Ghanaian Cedi</option>
+                    <option value="EGP">EGP - Egyptian Pound</option>
+                    <option value="MAD">MAD - Moroccan Dirham</option>
+                    <option value="BWP">BWP - Botswana Pula</option>
+                    <option value="ZMW">ZMW - Zambian Kwacha</option>
+                    <option value="MWK">MWK - Malawian Kwacha</option>
+                    <option value="MZN">MZN - Mozambican Metical</option>
+                    <option value="AOA">AOA - Angolan Kwanza</option>
+                    <option value="INR">INR - Indian Rupee</option>
+                    <option value="SGD">SGD - Singapore Dollar</option>
+                    <option value="HKD">HKD - Hong Kong Dollar</option>
+                    <option value="THB">THB - Thai Baht</option>
+                    <option value="MYR">MYR - Malaysian Ringgit</option>
+                    <option value="PHP">PHP - Philippine Peso</option>
+                    <option value="IDR">IDR - Indonesian Rupiah</option>
+                    <option value="VND">VND - Vietnamese Dong</option>
+                    <option value="KRW">KRW - South Korean Won</option>
+                    <option value="TWD">TWD - Taiwan Dollar</option>
+                    <option value="BRL">BRL - Brazilian Real</option>
+                    <option value="MXN">MXN - Mexican Peso</option>
+                    <option value="ARS">ARS - Argentine Peso</option>
+                    <option value="CLP">CLP - Chilean Peso</option>
+                    <option value="COP">COP - Colombian Peso</option>
+                    <option value="PEN">PEN - Peruvian Sol</option>
+                    <option value="RUB">RUB - Russian Ruble</option>
+                    <option value="TRY">TRY - Turkish Lira</option>
+                    <option value="PLN">PLN - Polish Zloty</option>
+                    <option value="CZK">CZK - Czech Koruna</option>
+                    <option value="HUF">HUF - Hungarian Forint</option>
+                    <option value="DKK">DKK - Danish Krone</option>
+                    <option value="ILS">ILS - Israeli New Shekel</option>
+                    <option value="AED">AED - UAE Dirham</option>
+                    <option value="SAR">SAR - Saudi Riyal</option>
+                    <option value="QAR">QAR - Qatari Riyal</option>
+                    <option value="KWD">KWD - Kuwaiti Dinar</option>
+                    <option value="BHD">BHD - Bahraini Dinar</option>
+                    <option value="OMR">OMR - Omani Rial</option>
                   </select>
                 </div>
               </div>

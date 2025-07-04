@@ -53,10 +53,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
       if (user) {
-        // Load user profile from Firestore
-        const userDoc = await getDoc(doc(db, 'users', user.uid))
-        if (userDoc.exists()) {
-          setUserProfile(userDoc.data() as UserProfile)
+        try {
+          // Load user profile from Firestore
+          const userDoc = await getDoc(doc(db, 'users', user.uid))
+          
+          if (userDoc.exists()) {
+            const profileData = userDoc.data()
+            
+            // Convert Firestore timestamps to Date objects
+            const profile = {
+              ...profileData,
+              createdAt: profileData.createdAt?.toDate ? profileData.createdAt.toDate() : new Date(profileData.createdAt || Date.now()),
+              lastLoginAt: profileData.lastLoginAt?.toDate ? profileData.lastLoginAt.toDate() : new Date(profileData.lastLoginAt || Date.now())
+            } as UserProfile
+            
+            setUserProfile(profile)
+          } else {
+            // Create a default profile if none exists
+            const defaultProfile: UserProfile = {
+              uid: user.uid,
+              email: user.email || '',
+              displayName: user.displayName || '',
+              firstName: '',
+              lastName: '',
+              company: '',
+              role: 'User',
+              createdAt: new Date(),
+              lastLoginAt: new Date()
+            }
+            await setDoc(doc(db, 'users', user.uid), defaultProfile)
+            setUserProfile(defaultProfile)
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error)
         }
       } else {
         setUserProfile(null)
@@ -140,8 +169,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Update Firebase Auth profile if display name changed
     if (data.firstName || data.lastName) {
+      const newDisplayName = `${updatedProfile.firstName} ${updatedProfile.lastName}`
       await updateProfile(user, {
-        displayName: `${updatedProfile.firstName} ${updatedProfile.lastName}`
+        displayName: newDisplayName
       })
     }
   }

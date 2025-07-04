@@ -5,7 +5,7 @@ import { useProjectStore } from '../../store/projectStore';
 import { useUIStore } from '../../store/uiStore';
 import { AuditTrailViewer } from '../features/review/AuditTrailViewer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
-import { ArrowLeft, Download, RotateCcw, History, Loader2 } from 'lucide-react';
+import { ArrowLeft, Download, RotateCcw, History, Loader2, Eye } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
 import { calculateTotals } from '@/lib/financialCalculations';
 
@@ -109,11 +109,16 @@ export const Preview: React.FC = () => {
             <Button variant="ghost" size="icon" onClick={handleBack}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Preview & Export</h1>
-              <p className="text-sm text-muted-foreground">
-                {currentProject.companyName} - Period ending {new Date(activePeriod.reportingDate).toLocaleDateString()}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                <Eye className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Preview & Export</h1>
+                <p className="text-sm text-muted-foreground">
+                  {currentProject.companyName} - Period ending {new Date(activePeriod.reportingDate).toLocaleDateString()}
+                </p>
+              </div>
             </div>
           </div>
           

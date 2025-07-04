@@ -7,6 +7,8 @@ import { ProjectSetup } from './components/pages/ProjectSetup'
 import { DataImport } from './components/pages/DataImport'
 import { ReportEditor } from './components/pages/ReportEditor'
 import { Preview } from './components/pages/Preview'
+import { UserProfile } from './components/pages/UserProfile'
+import { Settings } from './components/pages/Settings'
 import { CollaborationPanel } from './components/CollaborationPanel'
 import { useUIStore } from './store/uiStore'
 import { useProjectStore } from './store/projectStore'
@@ -61,40 +63,9 @@ function AppContent() {
       case 'collaboration':
         return <CollaborationPanel />
       case 'user-profile':
-        return (
-          <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">User Profile</h1>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                  <p className="mt-1 text-lg">{userProfile.displayName}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                  <p className="mt-1 text-lg">{userProfile.email}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Company</label>
-                  <p className="mt-1 text-lg">{userProfile.company || 'Not specified'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Member Since</label>
-                  <p className="mt-1 text-lg">{userProfile.createdAt.toLocaleDateString()}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
+        return <UserProfile />
       case 'settings':
-        return (
-          <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Settings</h1>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <p className="text-gray-600 dark:text-gray-400">Application settings will be available in a future update.</p>
-            </div>
-          </div>
-        )
+        return <Settings />
       default:
         return <Dashboard />
     }

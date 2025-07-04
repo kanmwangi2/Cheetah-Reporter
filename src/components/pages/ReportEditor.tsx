@@ -10,7 +10,7 @@ import { useUIStore } from "../../store/uiStore";
 import { CommentSidebar } from "../features/comments/CommentSidebar";
 import { useProjectStore } from "../../store/projectStore";
 import { Button } from "../ui/Button";
-import { MessageSquare, Upload } from "lucide-react";
+import { MessageSquare, Upload, Edit3 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DataImport from '../features/data-import/DataImport';
 
@@ -31,11 +31,16 @@ export function ReportEditor() {
     <div className="flex h-full">
       <div className="flex-1 p-4 md:p-6">
         <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">Report Editor</h2>
-            <p className="text-muted-foreground">
-              Prepare and review the financial statements.
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <Edit3 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Report Editor</h2>
+              <p className="text-muted-foreground">
+                Prepare and review the financial statements.
+              </p>
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <Button onClick={() => setIsImporting(true)}>

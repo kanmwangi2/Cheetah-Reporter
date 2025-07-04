@@ -8,7 +8,6 @@ import {
   getDocs, 
   query, 
   where, 
-  orderBy, 
   onSnapshot,
   serverTimestamp,
   Timestamp 
@@ -72,14 +71,40 @@ export class ProjectService {
 
   // Get user's projects
   static async getUserProjects(userId: string): Promise<Project[]> {
-    const q = query(
+    // Get projects where user is the creator (temporarily without orderBy until index builds)
+    const createdQuery = query(
       collection(db, this.COLLECTION),
-      where(`collaborators.${userId}`, 'in', ['admin', 'editor', 'viewer']),
-      orderBy('updatedAt', 'desc')
+      where('createdBy', '==', userId)
     )
     
-    const querySnapshot = await getDocs(q)
-    return querySnapshot.docs.map(convertFirestoreProject)
+    // Get projects where user is a collaborator (without orderBy to avoid index requirement)
+    const collaboratorQuery = query(
+      collection(db, this.COLLECTION),
+      where(`collaborators.${userId}`, 'in', ['admin', 'editor', 'viewer'])
+    )
+    
+    const [createdSnapshot, collaboratorSnapshot] = await Promise.all([
+      getDocs(createdQuery),
+      getDocs(collaboratorQuery)
+    ])
+    
+    // Combine results and remove duplicates
+    const projectMap = new Map<string, Project>()
+    
+    createdSnapshot.docs.forEach(doc => {
+      projectMap.set(doc.id, convertFirestoreProject(doc))
+    })
+    
+    collaboratorSnapshot.docs.forEach(doc => {
+      if (!projectMap.has(doc.id)) {
+        projectMap.set(doc.id, convertFirestoreProject(doc))
+      }
+    })
+    
+    // Sort by updatedAt in memory
+    return Array.from(projectMap.values()).sort((a, b) => 
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )
   }
 
   // Get a specific project
@@ -140,16 +165,62 @@ export class ProjectService {
 
   // Subscribe to user's projects
   static subscribeToUserProjects(userId: string, callback: (projects: Project[]) => void) {
-    const q = query(
+    // Subscribe to projects where user is the creator (temporarily without orderBy until index builds)
+    const createdQuery = query(
       collection(db, this.COLLECTION),
-      where(`collaborators.${userId}`, 'in', ['admin', 'editor', 'viewer']),
-      orderBy('updatedAt', 'desc')
+      where('createdBy', '==', userId)
     )
     
-    return onSnapshot(q, (querySnapshot) => {
-      const projects = querySnapshot.docs.map(convertFirestoreProject)
+    // Subscribe to projects where user is a collaborator
+    const collaboratorQuery = query(
+      collection(db, this.COLLECTION),
+      where(`collaborators.${userId}`, 'in', ['admin', 'editor', 'viewer'])
+    )
+    
+    const projectMap = new Map<string, Project>()
+    
+    const updateProjects = () => {
+      const projects = Array.from(projectMap.values()).sort((a, b) => 
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
       callback(projects)
+    }
+    
+    const createdUnsubscribe = onSnapshot(createdQuery, (snapshot) => {
+      // Update created projects
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added' || change.type === 'modified') {
+          projectMap.set(change.doc.id, convertFirestoreProject(change.doc))
+        } else if (change.type === 'removed') {
+          projectMap.delete(change.doc.id)
+        }
+      })
+      updateProjects()
     })
+    
+    const collaboratorUnsubscribe = onSnapshot(collaboratorQuery, (snapshot) => {
+      // Update collaborator projects (but don't override if already exists from created query)
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added' || change.type === 'modified') {
+          if (!projectMap.has(change.doc.id)) {
+            projectMap.set(change.doc.id, convertFirestoreProject(change.doc))
+          }
+        } else if (change.type === 'removed') {
+          const project = convertFirestoreProject(change.doc)
+          // Only remove if user is not the creator
+          if (project.createdBy !== userId) {
+            projectMap.delete(change.doc.id)
+          }
+        }
+      })
+      updateProjects()
+    })
+    
+    // Return a function that unsubscribes from both queries
+    return () => {
+      createdUnsubscribe()
+      collaboratorUnsubscribe()
+    }
   }
 
   // Check user access to project

@@ -168,7 +168,6 @@ The application will be a Single Page Application (SPA) with different views ren
 - **Multi-Period Comparisons:** Side-by-side comparison of up to 5 years of financial data
 - **Variance Analysis:** Automated calculation and highlighting of significant variances between periods
 - **Trend Analysis:** Visual charts showing key metrics trends over time
-- **Industry Benchmarking:** Compare key ratios against industry averages (integration with external data sources)
 - **Executive Dashboard:** High-level KPI dashboard for C-suite executives with drill-down capabilities
 - **Custom Report Builder:** Drag-and-drop interface to create custom financial reports and presentations
 
@@ -177,7 +176,6 @@ The application will be a Single Page Application (SPA) with different views ren
 
 **Implementation:**
 - **Pattern Recognition for Data Import:** Algorithm-based parsing to automatically detect and map common CSV formats and account structures
-- **Bank Statement Integration:** Direct API connections to major banks for automatic transaction import with rule-based categorization
 - **Multi-Currency Support:** Automatic currency conversion with real-time exchange rates from reliable financial data providers
 - **Recurring Journal Entries:** Template and automate recurring adjustments and reclassifications based on predefined rules
 - **Data Validation Engine:** Comprehensive business rules to automatically validate data integrity and flag inconsistencies
@@ -189,33 +187,7 @@ The application will be a Single Page Application (SPA) with different views ren
 **Implementation:**
 - **Standards Update Notifications:** Automatic alerts when new IFRS standards are released
 - **Compliance Checklist Engine:** Dynamic checklists that update based on applicable standards and company characteristics
-- **Regulatory Filing Integration:** Direct export to regulatory filing systems (XBRL, iXBRL)
-- **Audit Trail for Regulators:** Specialized audit trail views formatted for regulatory inspections
-- **Country-Specific Adaptations:** Support for local GAAP variations and additional disclosure requirements
 - **Impact Assessment Tools:** Analyze how new standards affect existing financial statements
-
-### Feature 9: Mobile & Offline Capabilities
-**Description:** Enable productivity on-the-go and in environments with limited connectivity.
-
-**Implementation:**
-- **Progressive Web App (PWA):** Full mobile experience with app-like functionality
-- **Offline Mode:** Continue working on financial statements without internet connection
-- **Mobile Review Interface:** Optimized mobile interface for reviewing and approving statements
-- **Push Notifications:** Real-time alerts for comments, approvals, and deadlines
-- **Audio Notes:** Add voice comments for review purposes
-- **QR Code Sharing:** Quick sharing of report links via QR codes
-
-### Feature 10: Advanced Security & Governance
-**Description:** Enterprise-grade security and governance features for sensitive financial data.
-
-**Implementation:**
-- **Single Sign-On (SSO):** Integration with enterprise identity providers (Azure AD, Okta)
-- **Two-Factor Authentication:** Enhanced security for accessing financial data
-- **Data Encryption:** End-to-end encryption for all financial data in transit and at rest
-- **Role-Based Data Masking:** Hide sensitive information based on user roles
-- **Geographic Data Residency:** Store data in specific regions to comply with local regulations
-- **Backup & Disaster Recovery:** Automated backups with point-in-time recovery capabilities
-- **Digital Signatures:** Legally binding digital signatures for report approval workflows
 
 ## 6. Advanced Business Features
 
@@ -227,19 +199,11 @@ A comprehensive module to handle group financial statements:
 - Support for different consolidation methods (full consolidation, equity method)
 - Multi-currency consolidation with translation adjustments
 
-### XBRL & Digital Reporting
-For public companies and regulatory compliance:
-- Apply XBRL tags to financial data within the app
-- Export compliant digital financial reports (iXBRL format)
-- Automated validation against taxonomy requirements
-- Support for multiple XBRL taxonomies (US GAAP, IFRS, local variations)
-
-### Enterprise Resource Planning (ERP) Integration
-Direct API integration with major accounting platforms:
-- **QuickBooks, Xero, Sage:** Automatic trial balance synchronization
-- **SAP, Oracle, NetSuite:** Enterprise-level ERP system integration
-- **Real-time Data Sync:** Automatic updates when source data changes
-- **Bi-directional Integration:** Push adjustments back to source systems
+### Advanced Data Export & Compliance
+For regulatory compliance and data portability:
+- Export to multiple formats (PDF, Excel, CSV)
+- Maintain data integrity across export formats
+- Support for standard financial reporting layouts
 
 ## 7. Enhanced User Workflow Examples
 
@@ -247,9 +211,7 @@ Direct API integration with major accounting platforms:
 1. **Smart Data Import:** Manager uploads trial balance, rule-based validation immediately flags 3 potential data inconsistencies
 2. **Automated Disclosure Suggestions:** System suggests relevant IFRS disclosures based on account balances and predefined thresholds
 3. **Collaborative Review:** CFO receives mobile notification, reviews on tablet during commute
-4. **Audio Comments:** External auditor adds voice note while reviewing physical inventory counts
 5. **Real-time Analytics:** Executive dashboard shows ratio changes instantly as adjustments are made using mathematical calculations
-6. **Multi-format Export:** Generate PDF for board meeting, XBRL for regulatory filing, and Excel dataset for analysis
 
 ### Scenario 2: Year-End Consolidation Workflow
 1. **Multi-Entity Setup:** Parent company creates project, invites subsidiary accountants as editors
@@ -257,54 +219,16 @@ Direct API integration with major accounting platforms:
 3. **Automated Consolidation:** System eliminates intercompany transactions and calculates goodwill
 4. **Currency Translation:** Real-time FX rates applied to foreign subsidiaries
 5. **Group Review:** Group CFO reviews consolidated statements with variance analysis vs. budget
-6. **Regulatory Compliance:** One-click generation of local GAAP and IFRS versions for different jurisdictions
+6. **Standards Compliance:** One-click generation of compliant financial statements
 
 ### Scenario 3: Template-Driven Efficiency
 1. **Template Selection:** New client setup using "Manufacturing Company - IFRS SME" template
-2. **Pattern-Based Mapping:** System suggests account mappings based on common chart of accounts patterns and naming conventions
-3. **Industry Benchmarking:** System automatically compares ratios to manufacturing industry averages from reliable databases
-4. **Automated Disclosures:** 80% of standard notes pre-populated based on trial balance data and predefined templates
+2. **Automated Mapping:** System suggests account mappings based on template structure
+3. **Industry Standards:** System compares ratios to standard industry metrics
+4. **Automated Disclosures:** 80% of standard notes pre-populated based on trial balance data and templates
 5. **Quality Assurance:** Built-in validation rules catch common errors before review stage
-6. **Client Portal:** Secure client access to view draft statements and provide feedback
+6. **Client Review:** Secure client access to view draft statements and provide feedback
 
-## 8. Implementation Roadmap & Monetization
-
-### Phase 1: Core MVP (Months 1-6)
-- Basic React/Firebase application with authentication
-- Trial balance import and mapping functionality  
-- Financial statement generation (SFP, P&L, SOCE, SCF)
-- Basic note editor and PDF export
-- User collaboration and commenting system
-
-### Phase 2: Enhanced Features (Months 7-12)
-- Rule-based anomaly detection and validation
-- Advanced reporting and analytics dashboard
-- Mobile PWA and offline capabilities
-- Template system and roll-forward functionality
-- Audit trail and version history
-
-### Phase 3: Enterprise Features (Months 13-18)
-- Consolidation engine for group companies
-- XBRL tagging and regulatory compliance
-- ERP system integrations
-- Advanced security and governance features
-- Multi-language and accessibility support
-
-### Phase 4: Ecosystem & Scale (Months 19-24)
-- Public API and third-party integrations
-- Industry-specific templates and compliance packs
-- Advanced algorithmic analysis and pattern recognition
-- Enterprise multi-tenant architecture
-- Global deployment and data residency
-
-### Monetization Strategy
-- **Freemium Model:** Basic features free, premium features paid
-- **Tiered Subscriptions:** 
-  - Individual: $29/month (single user, basic features)
-  - Professional: $79/month (5 users, advanced features)
-  - Enterprise: $199/month (unlimited users, all features)
-- **Add-on Services:** Industry templates ($99), Custom integrations ($299), Training & certification ($199)
-- **White-label Solutions:** License to accounting firms and software vendors
 
 ### Project Setup
 You are to build a React application using Vite, Tailwind CSS, Zustand, and Firebase.
@@ -379,68 +303,49 @@ Add components for new features:
 - **Database Optimization:** Efficient indexing and querying for large datasets
 - **Real-time Sync:** Instant synchronization across all user sessions and devices
 
-## 10. Integration Ecosystem
+## 10. Integration & Export Features
 
-### Third-Party Integrations
-- **Microsoft Office 365:** Direct integration with Excel, Word, and Teams
-- **Google Workspace:** Seamless integration with Google Sheets and Drive
-- **Slack/Microsoft Teams:** Send notifications and updates to team channels
-- **DocuSign:** Electronic signature integration for report approvals
-- **Dropbox/OneDrive:** Cloud storage integration for document management
-- **Zoom/Calendar Apps:** Schedule and join review meetings directly from the app
+### Export & Data Portability
+- **Multiple Export Formats:** PDF, Excel, CSV, and Word formats
+- **Custom Report Layouts:** Configurable report templates and formatting
+- **Data Export Tools:** Export trial balance, mappings, and financial data
+- **Backup & Restore:** Complete project backup and restoration capabilities
 
-### API & Extensibility
-- **Public API:** Allow third-party developers to build integrations
-- **Webhook Support:** Real-time notifications to external systems
-- **Plugin Architecture:** Support for custom extensions and add-ons
-- **SDK Development:** Provide SDKs for popular programming languages
+## 11. User Experience & Performance
 
-## 11. User Experience Enhancements
+### Performance & Scalability
+- **Intelligent Caching:** Cache frequently accessed financial data and calculations
+- **Lazy Loading:** Load financial statement sections on-demand to improve initial page load
+- **Background Processing:** Process large trial balance imports and PDF generation in the background
+- **Real-time Sync:** Instant synchronization across all user sessions and devices
 
-### Accessibility & Usability
-- **WCAG 2.1 Compliance:** Full accessibility support for users with disabilities
-- **Multi-Language Support:** Interface translation for global accounting firms
-- **Keyboard Shortcuts:** Power user shortcuts for common actions
-- **Customizable Dashboards:** Personalized workspace layouts and widgets
-- **Context-Sensitive Help:** Smart help system that provides relevant guidance
+### Core User Experience
+- **Dark/Light Mode:** Full theme support with user preferences
+- **Responsive Design:** Optimized for desktop, tablet, and mobile devices
+- **Offline Capabilities:** Basic offline functionality for viewing and editing
+- **Real-time Collaboration:** Live updates and collaborative editing
 
-### Learning & Onboarding
-- **Interactive Tutorials:** Step-by-step guided tours for new users
-- **Video Training Library:** Comprehensive video tutorials for all features
-- **Certification Program:** Professional certification for app proficiency
-- **Best Practices Guide:** Built-in recommendations for optimal workflows
-- **Community Forum:** User community for sharing tips and asking questions
+## 12. Business Rules & Validation Engine
 
-## 12. Algorithmic Intelligence & Validation Engine
-
-### Rule-Based Financial Analysis
+### Core Validation Framework
 **Core Algorithms:**
 - **Balance Sheet Validation:** Ensure Assets = Liabilities + Equity with configurable tolerance levels
 - **Cash Flow Reconciliation:** Automatic reconciliation between indirect cash flow method and balance sheet movements
-- **Ratio Analysis Engine:** 50+ pre-programmed financial ratios with industry benchmarks and trend analysis
-- **Materiality Calculations:** Automatic materiality threshold calculations based on established auditing standards
-- **Variance Detection:** Statistical algorithms to identify significant period-over-period changes
+- **Ratio Analysis Engine:** 20+ pre-programmed financial ratios with trend analysis
+- **Materiality Calculations:** Basic materiality threshold calculations based on established standards
+- **Variance Detection:** Basic algorithms to identify significant period-over-period changes
 
 ### Data Validation Framework
 **Validation Rules:**
 - **Account Code Validation:** Ensure all accounts follow proper coding standards and hierarchies
-- **Debit/Credit Balance Rules:** Validate that account types have appropriate balance types (assets = debit, liabilities = credit)
+- **Debit/Credit Balance Rules:** Validate that account types have appropriate balance types
 - **Inter-Statement Consistency:** Cross-reference figures between financial statements for accuracy
-- **IFRS Compliance Checks:** Built-in rules to ensure compliance with specific IFRS requirements
+- **IFRS Compliance Checks:** Built-in rules to ensure compliance with basic IFRS requirements
 - **Currency Validation:** Ensure multi-currency transactions are properly converted and presented
 
-### Pattern Recognition System
-**Smart Mapping:**
-- **Account Name Matching:** Algorithm matches imported account names to standard IFRS classifications
-- **Historical Learning:** System learns from previous mappings to suggest better matches over time
-- **Industry Templates:** Pre-built mapping templates for different industry sectors
-- **Fuzzy Matching:** Handle variations in account naming conventions and typos
-- **Confidence Scoring:** Provide confidence levels for automated mapping suggestions
-
-### Disclosure Automation Engine
-**Rule-Based Disclosure Selection:**
-- **Threshold-Based Triggers:** Automatically suggest disclosures when account balances exceed materiality thresholds
-- **Cross-Reference Analysis:** Identify required disclosures based on account combinations and relationships
-- **Standards Database:** Comprehensive database of IFRS disclosure requirements with automated matching
-- **Template Library:** Pre-built disclosure templates that auto-populate with relevant data
-- **Completeness Checking:** Ensure all required disclosures are included based on company characteristics
+### Basic Automation
+**Smart Features:**
+- **Account Mapping:** Basic account matching for common account names
+- **Template Application:** Apply saved templates to new projects
+- **Standard Disclosures:** Pre-built disclosure templates with basic auto-population
+- **Validation Alerts:** Highlight potential issues and inconsistencies

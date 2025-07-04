@@ -53,11 +53,16 @@ export const Dashboard: React.FC = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Financial Statement Projects</h1>
-          <p className="text-muted-foreground">
-            Manage your IFRS financial statement preparation projects
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+            <Building className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Financial Statement Projects</h1>
+            <p className="text-muted-foreground">
+              Manage your IFRS financial statement preparation projects
+            </p>
+          </div>
         </div>
         <Button onClick={handleCreateNew} className="sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />

@@ -86,7 +86,8 @@ export const CollaborationPanel: React.FC = () => {
   const removeCollaborator = (userId: string) => {
     if (!currentProject) return
 
-    const { [userId]: removed, ...remainingCollaborators } = currentProject.collaborators
+    const remainingCollaborators = { ...currentProject.collaborators }
+    delete remainingCollaborators[userId]
     updateProject(currentProject.id, {
       collaborators: remainingCollaborators
     }, user?.uid || '', userProfile?.email || '')
@@ -150,7 +151,7 @@ export const CollaborationPanel: React.FC = () => {
               <label className="block text-sm font-medium mb-2">Role</label>
               <select
                 value={inviteForm.role}
-                onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as any })}
+                onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as 'admin' | 'editor' | 'viewer' })}
                 className="w-full p-2 border rounded-md"
               >
                 <option value="viewer">Viewer - Can view reports only</option>
@@ -207,7 +208,7 @@ export const CollaborationPanel: React.FC = () => {
                   </span>
                   <select
                     value={role}
-                    onChange={(e) => updateCollaboratorRole(userId, e.target.value as any)}
+                    onChange={(e) => updateCollaboratorRole(userId, e.target.value as 'admin' | 'editor' | 'viewer')}
                     className="text-sm border rounded p-1"
                   >
                     <option value="viewer">Viewer</option>
@@ -402,11 +403,16 @@ export const CollaborationPanel: React.FC = () => {
       {/* Header */}
       <div className="border-b bg-white px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Collaboration</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage team access and communication for {currentProject.companyName}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+              <Users className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Collaboration</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage team access and communication for {currentProject.companyName}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
@@ -433,7 +439,7 @@ export const CollaborationPanel: React.FC = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'collaborators' | 'comments' | 'permissions')}
                 className={`
                   px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2
                   ${activeTab === tab.id 
