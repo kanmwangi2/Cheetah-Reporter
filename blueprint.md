@@ -248,9 +248,15 @@ The application is a Single Page Application (SPA) with different views rendered
 - **Custom Report Builder:** Interface to create custom financial reports and presentations
 
 ### Feature 8: Data Integration & Automation
-**Description:** Streamline data collection and reduce manual entry through automated processes.
+**Description:** Streamlines data collection and reduces manual entry through automated processes.
 
-**Implementation:**
+**Current Implementation:**
+- **Automated Statement Generation:** Complete implementation using `automationEngine.ts` and `statementPopulator.ts`
+  - Intelligent account pattern recognition with 25+ pre-built classifications
+  - Smart mapping suggestions with confidence scoring (30-90% confidence levels)
+  - One-click statement generation from mapped trial balance
+  - Auto-population of Balance Sheet, Income Statement, and Statement of Changes in Equity
+  - Built-in validation and error checking
 - **Pattern Recognition for Data Import:** Algorithm-based parsing to automatically detect and map common CSV formats
 - **Multi-Currency Support:** Automatic currency conversion with exchange rates
 - **Recurring Journal Entries:** Template and automate recurring adjustments and reclassifications
@@ -417,7 +423,12 @@ Store user-generated templates for reuse across projects.
 - **Currency Validation:** Ensure multi-currency transactions are properly converted and presented
 
 ### Smart Automation Features
-- **Account Mapping:** Basic account matching for common account names
+- **Automated Statement Generation:** Fully implemented one-click statement generation from trial balance
+  - Advanced account pattern recognition with 25+ pre-built classifications
+  - Smart mapping suggestions with confidence scoring (30-90% confidence levels)
+  - Automated population of Balance Sheet, Income Statement, and Statement of Changes in Equity
+  - Real-time validation and error checking during generation
+- **Account Mapping:** Enhanced account matching for common account names with fallback suggestions
 - **Template Application:** Apply saved templates to new projects
 - **Standard Disclosures:** Pre-built disclosure templates with basic auto-population
 - **Validation Alerts:** Highlight potential issues and inconsistencies
