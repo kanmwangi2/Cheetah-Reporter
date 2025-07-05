@@ -5,7 +5,7 @@ import { Layout } from './components/Layout'
 import { Login } from './components/Login'
 import { Dashboard } from './components/pages/Dashboard'
 import { ProjectSetup } from './components/pages/ProjectSetup'
-import DataImport from './components/features/data-import/DataImport'
+import DataImport from './components/pages/DataImport'
 import { AdjustmentsPage } from './components/pages/Adjustments'
 import { DataExport } from './components/pages/DataExport'
 import { ReportEditor } from './components/pages/ReportEditor'
@@ -13,6 +13,7 @@ import { Preview } from './components/pages/Preview'
 import { Disclosures } from './components/pages/Disclosures'
 import { UserProfile } from './components/pages/UserProfile'
 import { Settings } from './components/pages/Settings'
+import { AccountClassifications } from './components/pages/AccountClassifications'
 import { CollaborationPanel } from './components/CollaborationPanel'
 import { useUIStore } from './store/uiStore'
 import { useProjectStore } from './store/projectStore'
@@ -54,7 +55,7 @@ function AppContent() {
 
   const renderCurrentView = () => {
     const { activePeriodId } = useProjectStore.getState();
-    const { setCurrentView } = useUIStore.getState();
+    // const { setCurrentView } = useUIStore.getState();
     
     switch (currentView) {
       case 'dashboard':
@@ -62,7 +63,7 @@ function AppContent() {
       case 'project-setup':
         return <ProjectSetup />
       case 'data-import':
-        return <DataImport onComplete={() => setCurrentView('report-editor')} />
+        return <DataImport onComplete={() => useUIStore.getState().setCurrentView('report-editor')} />
       case 'adjustments':
         return <AdjustmentsPage periodId={activePeriodId || ''} />
       case 'data-export':
@@ -79,6 +80,8 @@ function AppContent() {
         return <UserProfile />
       case 'settings':
         return <Settings />
+      case 'account-classifications':
+        return <AccountClassifications />
       default:
         return <Dashboard />
     }

@@ -13,15 +13,7 @@ import { formatCurrency } from '../../lib/utils';
 import type { JournalEntry, JournalEntryFilters, JournalEntryStatus, JournalEntryType } from '../../types/adjustments';
 import type { TrialBalanceAccount } from '../../types/project';
 import { JournalEntryStatus as JEStatus, JournalEntryType as JEType } from '../../types/adjustments';
-
-// Helper function for date formatting
-const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
+import { useDateFormat } from '../../lib/dateUtils';
 
 interface AdjustmentsPageProps {
   periodId: string;
@@ -30,6 +22,7 @@ interface AdjustmentsPageProps {
 export const AdjustmentsPage: React.FC<AdjustmentsPageProps> = ({ periodId }) => {
   const { currentProject, activePeriodId } = useProjectStore();
   const { user } = useAuth();
+  const { formatDate } = useDateFormat();
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

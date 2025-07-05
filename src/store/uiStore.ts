@@ -3,8 +3,9 @@ import { devtools, persist } from 'zustand/middleware'
 
 interface UIState {
   theme: 'light' | 'dark' | 'system'
+  dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD' | 'DD-MM-YYYY'
   sidebarOpen: boolean
-  currentView: 'dashboard' | 'project-setup' | 'data-import' | 'adjustments' | 'data-export' | 'disclosures' | 'report-editor' | 'preview' | 'collaboration' | 'user-profile' | 'settings'
+  currentView: 'dashboard' | 'project-setup' | 'data-import' | 'adjustments' | 'data-export' | 'disclosures' | 'report-editor' | 'preview' | 'collaboration' | 'user-profile' | 'settings' | 'account-classifications'
   activeTab: 'sfp' | 'pnl' | 'soce' | 'scf' | 'notes'
   isCommentSidebarOpen: boolean
   selectedCommentElementId: string | null
@@ -12,6 +13,7 @@ interface UIState {
   // Actions
   toggleTheme: () => void
   setTheme: (theme: 'light' | 'dark' | 'system') => void
+  setDateFormat: (format: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD' | 'DD-MM-YYYY') => void
   toggleSidebar: () => void
   setSidebarOpen: (open: boolean) => void
   setCurrentView: (view: UIState['currentView']) => void
@@ -24,6 +26,7 @@ export const useUIStore = create<UIState>()(
     persist(
       (set) => ({
         theme: 'dark', // Default dark mode as per blueprint
+        dateFormat: 'DD/MM/YYYY', // Default DD/MM/YYYY format
         sidebarOpen: true,
         currentView: 'dashboard',
         activeTab: 'sfp',
@@ -38,6 +41,8 @@ export const useUIStore = create<UIState>()(
         }),
 
         setTheme: (theme) => set({ theme }),
+        
+        setDateFormat: (dateFormat) => set({ dateFormat }),
 
         toggleSidebar: () => set((state) => ({
           sidebarOpen: !state.sidebarOpen

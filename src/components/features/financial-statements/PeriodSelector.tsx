@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
+import { useDateFormat } from '@/lib/dateUtils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -25,6 +26,8 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
     activePeriodId,
     setActivePeriod,
   } = useProjectStore();
+  
+  const { formatDate } = useDateFormat();
 
   const [selectedPeriods, setSelectedPeriods] = useState<string[]>([]);
   const [comparisonMode, setComparisonMode] = useState<'year-over-year' | 'quarter-over-quarter' | 'period-over-period'>('year-over-year');
@@ -90,7 +93,7 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   };
 
   const formatPeriodLabel = (period: PeriodData) => {
-    const date = new Date(period.reportingDate).toLocaleDateString();
+    const date = formatDate(period.reportingDate);
     const statusBadge = period.status !== 'approved' ? ` (${period.status})` : '';
     const periodType = period.periodType !== 'annual' ? ` [${period.periodType}]` : '';
     return `${date}${periodType}${statusBadge}`;

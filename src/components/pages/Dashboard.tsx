@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useProjectStore } from '../../store/projectStore'
 import { useDashboardStore } from '../../store/dashboardStore'
 import { useUIStore } from '../../store/uiStore'
+import { useDateFormat } from '../../lib/dateUtils'
 import { Button } from '../ui/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card'
 import { Input } from '../ui/Input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { Plus, Search, Calendar, Building, Save, LayoutDashboard, BarChart3, Trash2, Upload, MoreVertical } from 'lucide-react'
+import { Plus, Search, Calendar, Building, Save, LayoutDashboard, Trash2, Upload, MoreVertical } from 'lucide-react'
 import { SaveAsTemplateDialog } from '../features/templates/SaveAsTemplateDialog'
 import { DashboardBuilder } from '../features/dashboards/DashboardBuilder'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
@@ -29,11 +30,11 @@ export const Dashboard: React.FC = () => {
     setCurrentDashboard,
     createDashboard,
     loadUserDashboards,
-    createFromPreset,
     loading: dashboardLoading 
   } = useDashboardStore()
   const { user } = useAuthStore()
   const { setCurrentView } = useUIStore()
+  const { formatDate } = useDateFormat()
   const [searchTerm, setSearchTerm] = useState('')
   const [activeTab, setActiveTab] = useState('projects')
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
@@ -108,21 +109,6 @@ export const Dashboard: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to create dashboard:', error)
-      }
-    }
-  }
-
-  const handleCreateFromPresetClick = async (presetId: string) => {
-    if (user) {
-      try {
-        const dashboardId = await createFromPreset(presetId, `Dashboard from ${presetId}`)
-        const newDashboard = dashboards.find(d => d.id === dashboardId)
-        if (newDashboard) {
-          setCurrentDashboard(newDashboard)
-          setActiveTab('dashboard-builder')
-        }
-      } catch (error) {
-        console.error('Failed to create dashboard from preset:', error)
       }
     }
   }
@@ -211,7 +197,7 @@ export const Dashboard: React.FC = () => {
             </div>
             <Button onClick={handleCreateNew} className="sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              Create New Financial Statement
+              Create New Project
             </Button>
           </div>
 
@@ -228,14 +214,8 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <h3 className="mt-4 text-lg font-semibold">No projects found</h3>
                   <p className="text-muted-foreground">
-                    {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating your first financial statement project.'}
+                    {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating your first financial statement project using the button above.'}
                   </p>
-                  {!searchTerm && (
-                    <Button onClick={handleCreateNew} className="mt-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create New Project
-                    </Button>
-                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -253,7 +233,7 @@ export const Dashboard: React.FC = () => {
                                 <Calendar className="h-4 w-4 flex-shrink-0" />
                                 <span className="truncate">
                                   {project.periods && project.periods.length > 0 
-                                    ? new Date(project.periods[project.periods.length - 1].reportingDate).toLocaleDateString()
+                                    ? formatDate(project.periods[project.periods.length - 1].reportingDate)
                                     : 'No periods'
                                   }
                                 </span>
@@ -311,7 +291,7 @@ export const Dashboard: React.FC = () => {
                             <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">Last modified:</span>
                               <span className="font-medium">
-                                {new Date(project.updatedAt).toLocaleDateString()}
+                                {formatDate(project.updatedAt)}
                               </span>
                             </div>
                           </div>
@@ -346,16 +326,10 @@ export const Dashboard: React.FC = () => {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleCreateFromPresetClick('executive-overview')}>
-                <BarChart3 className="mr-2 h-4 w-4" />
-                Executive Overview
-              </Button>
-              <Button onClick={handleCreateNewDashboard}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Dashboard
-              </Button>
-            </div>
+            <Button onClick={handleCreateNewDashboard}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Dashboard
+            </Button>
           </div>
 
           {/* Dashboards Grid */}
@@ -370,20 +344,8 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <h3 className="mt-4 text-lg font-semibold">No dashboards found</h3>
                   <p className="text-muted-foreground">
-                    {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating your first interactive dashboard.'}
+                    {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating your first interactive dashboard using the button above.'}
                   </p>
-                  {!searchTerm && (
-                    <div className="flex gap-2 justify-center mt-4">
-                      <Button variant="outline" onClick={() => handleCreateFromPresetClick('executive-overview')}>
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        Executive Overview
-                      </Button>
-                      <Button onClick={handleCreateNewDashboard}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Dashboard
-                      </Button>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -415,7 +377,7 @@ export const Dashboard: React.FC = () => {
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Last modified:</span>
                             <span className="font-medium">
-                              {new Date(dashboard.updatedAt).toLocaleDateString()}
+                              {formatDate(dashboard.updatedAt)}
                             </span>
                           </div>
                         </div>

@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 import { useUIStore } from '../../store/uiStore'
 import { Button } from '../ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'
-import { Settings as SettingsIcon, Moon, Sun, Monitor, ArrowLeft } from 'lucide-react'
+import { Settings as SettingsIcon, Moon, Sun, Monitor, ArrowLeft, Calendar } from 'lucide-react'
 import { useTheme } from '../../hooks/useTheme'
+import { getDateFormatOptions, type DateFormat } from '../../lib/dateUtils'
 
 export const Settings: React.FC = () => {
-  const { setCurrentView } = useUIStore()
+  const { setCurrentView, dateFormat, setDateFormat } = useUIStore()
   const { theme, setTheme } = useTheme()
   const [message, setMessage] = useState('')
 
@@ -15,6 +16,14 @@ export const Settings: React.FC = () => {
     setMessage('Theme preference saved!')
     setTimeout(() => setMessage(''), 3000)
   }
+
+  const handleDateFormatChange = (newFormat: DateFormat) => {
+    setDateFormat(newFormat)
+    setMessage('Date format preference saved!')
+    setTimeout(() => setMessage(''), 3000)
+  }
+
+  const dateFormatOptions = getDateFormatOptions()
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -135,9 +144,20 @@ export const Settings: React.FC = () => {
                     How dates are displayed throughout the app
                   </div>
                 </div>
-                <Button variant="outline" size="sm" disabled>
-                  DD/MM/YYYY
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <select
+                    value={dateFormat}
+                    onChange={(e) => handleDateFormatChange(e.target.value as DateFormat)}
+                    className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {dateFormatOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label} ({option.example})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </CardContent>

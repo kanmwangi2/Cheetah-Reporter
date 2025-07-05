@@ -33,9 +33,14 @@ const commentStoreCreator: StateCreator<CommentStoreState> = (set, get) => ({
     get().cleanup(); // Unsubscribe from any existing listener
 
     set({ isLoading: true, error: null });
-    const unsubscribe = subscribeToComments(projectId, elementId, (comments) => {
-      set({ comments, isLoading: false });
-    });
+    const unsubscribe = subscribeToComments(
+      projectId, 
+      elementId, 
+      {}, // options - using defaults
+      (comments: Comment[]) => {
+        set({ comments, isLoading: false });
+      }
+    );
     set({ unsubscribe });
   },
 
