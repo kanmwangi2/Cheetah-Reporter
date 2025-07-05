@@ -40,15 +40,18 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     lineItem: 'Cash and Cash Equivalents',
     keywords: ['cash on hand', 'petty cash', 'cash at bank', 'bank current', 'checking account', 'savings account', 'money market', 'current account', 'momo', 'mobile money', 'mpesa', 'airtel money'],
     patterns: [
-      /^cash\s*(on\s*hand|at\s*bank|account)?$/i,
-      /^bank\s*(current|checking|savings)(?!\s*(loan|charges|fees|interest|overdraft))/i, // Positive: "Bank Current", Negative: "Bank Loan", "Bank Charges"
-      /^petty\s*cash$/i,
-      /^money\s*market$/i,
-      /^current\s*account$/i,
-      /^momo\s*(account)?$/i,
-      /^mobile\s*money$/i,
-      /^(m-?pesa|airtel\s*money|orange\s*money)$/i,
-      /equity\s*bank(?!\s*(loan|charges|fees|interest))/i // "Equity Bank" but not "Equity Bank Loan"
+      /cash/i, // Much more flexible - matches any account with "cash" in the name
+      /\bbank\b(?!\s*(loan|charges|fees|interest|overdraft))/i, // Matches "bank" but not if followed by negative terms
+      /petty/i,
+      /money\s*market/i,
+      /current\s*account/i,
+      /checking/i,
+      /savings/i,
+      /momo/i,
+      /mobile\s*money/i,
+      /m-?pesa/i,
+      /airtel\s*money/i,
+      /orange\s*money/i
     ],
     priority: 95,
     accountCodes: ['1000', '1001', '1010', '1100'],
@@ -63,10 +66,10 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     lineItem: 'Trade Receivables',
     keywords: ['accounts receivable', 'trade receivables', 'debtors', 'customer receivables', 'sales receivables'],
     patterns: [
-      /^(accounts?|trade)\s*receivables?$/i,
-      /^debtors?$/i,
-      /^customers?\s*(receivables?|outstanding|debtors?)$/i,
-      /^sales\s*receivables?$/i
+      /receivables?/i, // More flexible
+      /debtors?/i,
+      /customers?\s*(receivables?|outstanding|debtors?)/i,
+      /sales\s*receivables?/i
     ],
     priority: 90,
     accountCodes: ['1200', '1201', '1210'],
@@ -81,11 +84,13 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     lineItem: 'Inventory',
     keywords: ['inventory', 'stock', 'goods', 'merchandise', 'raw materials', 'work in progress', 'finished goods'],
     patterns: [
-      /^inventory$/i,
-      /^stock$/i,
-      /^(raw\s*materials?|work\s*in\s*progress|finished\s*goods)$/i,
-      /^merchandise$/i,
-      /^goods\s*(in\s*stock|on\s*hand)?$/i
+      /inventory/i,
+      /stock/i,
+      /raw\s*materials?/i,
+      /work\s*in\s*progress/i,
+      /finished\s*goods/i,
+      /merchandise/i,
+      /goods/i
     ],
     priority: 90,
     accountCodes: ['1300', '1301', '1310'],
@@ -100,11 +105,10 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     lineItem: 'Other Current Assets',
     keywords: ['prepaid', 'prepaid expenses', 'prepaid rent', 'prepaid insurance', 'prepaid services', 'advances paid', 'deposits paid'],
     patterns: [
-      /^prepaid\s*(expenses?|rent|insurance|services?)?$/i,
-      /^advances?\s*paid$/i,
-      /^deposits?\s*paid$/i,
-      /^prepayments?$/i,
-      /prepaid/i
+      /prepaid/i, // More flexible - any account with "prepaid"
+      /advances?\s*paid/i,
+      /deposits?\s*paid/i,
+      /prepayments?/i
     ],
     priority: 95,
     accountCodes: ['1400', '1401', '1410'],
@@ -138,11 +142,18 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     lineItem: 'Property, Plant and Equipment',
     keywords: ['property', 'plant', 'equipment', 'land', 'building', 'machinery', 'furniture', 'fixtures', 'vehicles', 'computer equipment', 'office equipment'],
     patterns: [
-      /^(property|land|buildings?|machinery|equipment|furniture|fixtures|vehicles?|computers?|office\s*equipment)$/i,
-      /^plant\s*(and\s*equipment)?$/i,
-      /^motor\s*vehicles?$/i,
-      /^computer\s*(equipment|hardware)$/i,
-      /^office\s*(furniture|equipment)$/i
+      /property/i,
+      /\bplant\b/i,
+      /equipment/i,
+      /\bland\b/i,
+      /buildings?/i,
+      /machinery/i,
+      /furniture/i,
+      /fixtures/i,
+      /vehicles?/i,
+      /computers?/i,
+      /motor\s*vehicles?/i,
+      /office\s*(furniture|equipment)/i
     ],
     priority: 85,
     accountCodes: ['1500', '1501', '1510', '1520'],
@@ -159,10 +170,10 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     lineItem: 'Trade Payables',
     keywords: ['accounts payable', 'trade payables', 'creditors', 'supplier payables', 'vendors payable'],
     patterns: [
-      /^(accounts?|trade)\s*payables?$/i,
-      /^creditors?$/i,
-      /^suppliers?\s*(payables?|outstanding|creditors?)$/i,
-      /^vendors?\s*payables?$/i
+      /payables?/i,
+      /creditors?/i,
+      /suppliers?/i,
+      /vendors?/i
     ],
     priority: 90,
     accountCodes: ['2100', '2101', '2110'],
@@ -254,7 +265,7 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     keywords: ['bank loan', 'bank borrowing', 'loan payable', 'borrowings', 'credit facility', 'overdraft'],
     patterns: [
       /^bank\s*(loan|borrowing|overdraft|credit\s*facility)$/i,
-      /equity\s*bank\s*(loan|borrowing|credit)/i, // "Equity Bank Loan" is a loan
+      /\b\w+\s*bank\s*(loan|borrowing|credit)/i, // Any bank name + loan/borrowing/credit is a loan
       /^loans?\s*payables?$/i,
       /^borrowings?$/i,
       /^credit\s*(facility|line)$/i,
@@ -313,11 +324,10 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     lineItem: 'Revenue from Sales',
     keywords: ['sales', 'revenue', 'income from sales', 'sales income', 'turnover', 'gross sales'],
     patterns: [
-      /^sales(\s*(revenue|income))?$/i,
-      /^revenue(\s*from\s*sales)?$/i,
-      /^(gross\s*)?sales$/i,
-      /^turnover$/i,
-      /^income\s*from\s*sales$/i
+      /sales/i,
+      /revenue/i,
+      /turnover/i,
+      /income/i
     ],
     priority: 90,
     accountCodes: ['4000', '4001', '4010'],
