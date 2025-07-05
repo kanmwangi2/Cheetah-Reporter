@@ -233,6 +233,41 @@ const DataImport: React.FC<DataImportProps> = ({ onComplete }) => {
     setCurrentView('account-classifications');
   };
 
+  // Transform account mapping to MappedTrialBalance structure
+  const transformToMappedTrialBalance = (
+    trialBalance: TrialBalanceAccount[],
+    mapping: AccountMapping
+  ): MappedTrialBalance => {
+    const mapped: MappedTrialBalance = {
+      assets: {},
+      liabilities: {},
+      equity: {},
+      revenue: {},
+      expenses: {}
+    };
+
+    // Group accounts by their mapped statement and line item
+    trialBalance.forEach(account => {
+      const accountMap = mapping[account.accountId];
+      if (!accountMap || accountMap.statement === 'unmapped' || accountMap.lineItem === 'none') {
+        return; // Skip unmapped accounts
+      }
+
+      const statement = accountMap.statement as keyof MappedTrialBalance;
+      const lineItem = accountMap.lineItem;
+
+      // Initialize the line item array if it doesn't exist
+      if (!mapped[statement][lineItem]) {
+        mapped[statement][lineItem] = [];
+      }
+
+      // Add the account to the appropriate line item
+      mapped[statement][lineItem].push(account);
+    });
+
+    return mapped;
+  };
+
   const completeImport = async () => {
     if (!activePeriodId) {
       setError('No active period selected');
@@ -240,12 +275,17 @@ const DataImport: React.FC<DataImportProps> = ({ onComplete }) => {
     }
 
     try {
+      // Transform the mapping to the proper MappedTrialBalance structure
+      const mappedTrialBalance = transformToMappedTrialBalance(trialBalanceData, accountMapping);
+      
       await updatePeriodTrialBalance(activePeriodId, {
         rawData: trialBalanceData,
-        mappings: accountMapping
+        mappings: accountMapping,
+        mappedTrialBalance // Add the properly structured mapped data
       });
       setStep('complete');
-    } catch {
+    } catch (error) {
+      console.error('Failed to save trial balance data:', error);
       setError('Failed to save trial balance data');
     }
   };

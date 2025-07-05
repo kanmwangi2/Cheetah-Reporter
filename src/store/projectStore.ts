@@ -131,7 +131,7 @@ export const useProjectStore = create<ProjectState>()(
     },
 
     updatePeriodTrialBalance: async (periodId: string, trialBalanceData: TrialBalanceData) => {
-        const { currentProject, loadProject } = get();
+        const { currentProject, setCurrentProject } = get();
         const { user } = useAuthStore.getState();
 
         if (!currentProject || !user) {
@@ -142,16 +142,21 @@ export const useProjectStore = create<ProjectState>()(
         set({ loading: true, error: null });
         try {
             const updatedPeriods = currentProject.periods.map(p => 
-                p.id === periodId ? { ...p, trialBalance: trialBalanceData } : p
+                p.id === periodId ? { ...p, trialBalance: trialBalanceData, mappedTrialBalance: trialBalanceData.mappedTrialBalance } : p
             );
 
+            // Update the project with new periods
+            const updatedProject = { ...currentProject, periods: updatedPeriods };
+            
             await ProjectService.updateProject(currentProject.id, { periods: updatedPeriods });
             await logAuditEvent(currentProject.id, user.uid, user.email || '', 'updateTrialBalance', { periodId });
             
-            // Reload the project to ensure state is fresh
-            await loadProject(currentProject.id);
+            // Update the current project state immediately without reloading
+            setCurrentProject(updatedProject);
+            set({ loading: false });
 
         } catch (error: unknown) {
+            console.error('Failed to update trial balance:', error);
             set({ error: (error as Error).message, loading: false });
         }
     },

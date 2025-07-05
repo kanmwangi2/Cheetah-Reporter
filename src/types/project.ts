@@ -56,6 +56,7 @@ export interface PeriodData {
 export interface TrialBalanceData {
   rawData: TrialBalanceAccount[];
   mappings: { [accountId: string]: { statement: string; lineItem: string } };
+  mappedTrialBalance?: MappedTrialBalance; // The structured trial balance data
   hasAdjustments?: boolean; // Indicates if adjustments have been applied
 }
 

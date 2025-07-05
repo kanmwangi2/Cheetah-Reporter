@@ -99,8 +99,8 @@ export function Combobox({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command shouldFilter={false}>
           <CommandInput 
             placeholder={searchPlaceholder}
             value={searchValue}
@@ -112,9 +112,10 @@ export function Combobox({
               {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
-                  onSelect={() => handleSelect(option.value)}
-                  className="flex items-center gap-2"
+                  value={option.label} // Use label for cmdk matching
+                  onSelect={() => handleSelect(option.value)} // Use option.value for our logic
+                  onClick={() => handleSelect(option.value)} // Fallback click handler
+                  className="flex items-center gap-2 cursor-pointer"
                 >
                   <Check
                     className={cn(

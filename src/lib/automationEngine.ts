@@ -36,8 +36,14 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     name: 'Cash and Bank Accounts',
     statement: 'assets',
     lineItem: 'Cash and Cash Equivalents',
-    keywords: ['cash', 'bank', 'checking', 'savings', 'petty cash', 'money market', 'cash on hand'],
-    patterns: [/\bcash\b/i, /\bbank\b/i, /\bpetty\s*cash\b/i, /\bmoney\s*market\b/i, /\bchecking\b/i, /\bsavings\b/i],
+    keywords: ['cash on hand', 'petty cash', 'cash at bank', 'bank account', 'checking account', 'savings account', 'money market', 'current account'],
+    patterns: [
+      /^cash\s*(on\s*hand|at\s*bank|account)?$/i,
+      /^bank\s*(account|current|checking|savings)$/i,
+      /^petty\s*cash$/i,
+      /^money\s*market$/i,
+      /^current\s*account$/i
+    ],
     priority: 90,
     accountCodes: ['1000', '1001', '1010', '1100'],
     description: 'Cash, bank accounts, and cash equivalents'
@@ -49,8 +55,14 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     name: 'Trade Receivables',
     statement: 'assets',
     lineItem: 'Trade Receivables',
-    keywords: ['accounts receivable', 'trade receivables', 'debtors', 'customers', 'receivables'],
-    patterns: [/\breceivables?\b/i, /\bdebtors?\b/i, /\baccounts?\s*receivable\b/i, /\btrade\s*receivables?\b/i, /\bcustomers?\b/i],
+    keywords: ['trade receivables', 'accounts receivable', 'trade debtors', 'customer receivables', 'sales receivables'],
+    patterns: [
+      /^(trade\s*)?receivables?$/i,
+      /^(trade\s*)?debtors?$/i,
+      /^accounts?\s*receivable$/i,
+      /^customer\s*receivables?$/i,
+      /^sales\s*receivables?$/i
+    ],
     priority: 85,
     accountCodes: ['1200', '1210', '1220'],
     description: 'Amounts owed by customers for goods or services'
@@ -192,11 +204,36 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     name: 'Administrative Expenses',
     statement: 'expenses',
     lineItem: 'Administrative Expenses',
-    keywords: ['administrative expenses', 'admin expenses', 'office expenses', 'general expenses', 'overhead'],
-    patterns: [/\badministrative\s*expenses?\b/i, /\badmin\s*expenses?\b/i, /\boffice\s*expenses?\b/i, /\bgeneral\s*expenses?\b/i, /\boverhead\b/i],
+    keywords: ['administrative expenses', 'admin expenses', 'office expenses', 'general expenses', 'overhead expenses'],
+    patterns: [
+      /^administrative\s*expenses?$/i,
+      /^admin\s*expenses?$/i,
+      /^office\s*expenses?$/i,
+      /^general\s*expenses?$/i,
+      /^overhead\s*expenses?$/i
+    ],
     priority: 80,
     accountCodes: ['6000', '6100'],
     description: 'General administrative and office expenses'
+  },
+
+  // Professional and Legal Fees
+  {
+    id: 'professional-fees',
+    name: 'Professional and Legal Fees',
+    statement: 'expenses',
+    lineItem: 'Other Operating Expenses',
+    keywords: ['professional fees', 'legal fees', 'audit fees', 'consulting fees', 'advisor fees'],
+    patterns: [
+      /^professional\s*fees?$/i,
+      /^legal\s*fees?$/i,
+      /^audit\s*fees?$/i,
+      /^consulting\s*fees?$/i,
+      /^advisor\s*fees?$/i
+    ],
+    priority: 85,
+    accountCodes: ['6070', '6080'],
+    description: 'Professional, legal, and consulting fees'
   },
 
   // Salaries and Wages
@@ -232,10 +269,29 @@ export const DEFAULT_ACCOUNT_CLASSIFICATIONS: AccountClassification[] = [
     statement: 'expenses',
     lineItem: 'Interest Expense',
     keywords: ['interest expense', 'finance costs', 'interest charges', 'borrowing costs'],
-    patterns: [/\binterest\s*expense\b/i, /\bfinance\s*costs?\b/i, /\binterest\s*charges?\b/i, /\bborrowing\s*costs?\b/i],
+    patterns: [/^interest\s*(expense|charges?)$/i, /^finance\s*costs?$/i, /^borrowing\s*costs?$/i],
     priority: 90,
     accountCodes: ['6400', '6500'],
     description: 'Interest paid on loans and borrowings'
+  },
+
+  // Bank Charges and Fees (High priority to prevent confusion with bank accounts)
+  {
+    id: 'bank-charges',
+    name: 'Bank Charges and Fees',
+    statement: 'expenses',
+    lineItem: 'Other Operating Expenses',
+    keywords: ['bank charges', 'bank fees', 'banking fees', 'transaction fees', 'account fees', 'service charges'],
+    patterns: [
+      /^bank\s*(charges?|fees?)$/i,
+      /^banking\s*fees?$/i,
+      /^transaction\s*fees?$/i,
+      /^account\s*fees?$/i,
+      /^service\s*charges?$/i
+    ],
+    priority: 95, // High priority to override bank account matching
+    accountCodes: ['6050', '6060'],
+    description: 'Bank charges, fees, and transaction costs'
   }
 ];
 
@@ -318,44 +374,87 @@ class AutomationEngine {
    */
   private calculateConfidence(account: TrialBalanceAccount, classification: AccountClassification): number {
     let confidence = 0;
+    const matchFactors: string[] = [];
     const accountName = account.accountName.toLowerCase();
     const accountCode = account.accountId.toLowerCase();
 
     // Check for exact account code matches (highest confidence)
     if (classification.accountCodes) {
       for (const code of classification.accountCodes) {
-        if (accountCode === code.toLowerCase() || accountCode.startsWith(code.toLowerCase())) {
+        if (accountCode === code.toLowerCase()) {
           confidence = Math.max(confidence, 95);
-        }
-      }
-    }
-
-    // Check pattern matches
-    for (const pattern of classification.patterns) {
-      if (pattern.test(accountName) || pattern.test(accountCode)) {
-        confidence = Math.max(confidence, 85 + (classification.priority / 100) * 10);
-      }
-    }
-
-    // Check keyword matches
-    for (const keyword of classification.keywords) {
-      if (accountName.includes(keyword.toLowerCase())) {
-        const exactMatch = accountName === keyword.toLowerCase();
-        const wordBoundaryMatch = new RegExp(`\\b${keyword.toLowerCase()}\\b`).test(accountName);
-        
-        if (exactMatch) {
+          matchFactors.push('exact code match');
+        } else if (accountCode.startsWith(code.toLowerCase())) {
           confidence = Math.max(confidence, 90);
-        } else if (wordBoundaryMatch) {
-          confidence = Math.max(confidence, 80);
-        } else {
-          confidence = Math.max(confidence, 60);
+          matchFactors.push('code prefix match');
         }
       }
+    }
+
+    // Check pattern matches (more precise than keywords)
+    for (const pattern of classification.patterns) {
+      if (pattern.test(accountName)) {
+        confidence = Math.max(confidence, 85 + (classification.priority / 100) * 10);
+        matchFactors.push('pattern match');
+        break; // Only count the first pattern match
+      }
+    }
+
+    // Check keyword matches with improved logic
+    let keywordScore = 0;
+    let keywordMatches = 0;
+    
+    for (const keyword of classification.keywords) {
+      const keywordLower = keyword.toLowerCase();
+      
+      // Exact match (whole account name)
+      if (accountName === keywordLower) {
+        keywordScore = Math.max(keywordScore, 90);
+        keywordMatches++;
+        matchFactors.push(`exact keyword match: "${keyword}"`);
+      }
+      // Multi-word keyword fully contained
+      else if (keywordLower.includes(' ') && accountName.includes(keywordLower)) {
+        keywordScore = Math.max(keywordScore, 85);
+        keywordMatches++;
+        matchFactors.push(`full phrase match: "${keyword}"`);
+      }
+      // Word boundary match (prevents partial matches like "bank" in "banking")
+      else if (new RegExp(`\\b${keywordLower}\\b`).test(accountName)) {
+        keywordScore = Math.max(keywordScore, 75);
+        keywordMatches++;
+        matchFactors.push(`word boundary match: "${keyword}"`);
+      }
+      // Partial match (lower confidence)
+      else if (accountName.includes(keywordLower) && keywordLower.length > 3) {
+        keywordScore = Math.max(keywordScore, 50);
+        keywordMatches++;
+        matchFactors.push(`partial match: "${keyword}"`);
+      }
+    }
+
+    // Apply keyword confidence
+    confidence = Math.max(confidence, keywordScore);
+
+    // Boost confidence for multiple keyword matches
+    if (keywordMatches > 1) {
+      confidence = Math.min(100, confidence + (keywordMatches - 1) * 5);
+      matchFactors.push(`multiple keyword matches: ${keywordMatches}`);
     }
 
     // Apply priority boost for high-priority classifications
-    if (confidence > 0 && classification.priority > 80) {
+    if (confidence > 0 && classification.priority > 90) {
+      confidence = Math.min(100, confidence + 10);
+      matchFactors.push('high priority classification');
+    } else if (confidence > 0 && classification.priority > 80) {
       confidence = Math.min(100, confidence + 5);
+      matchFactors.push('medium priority classification');
+    }
+
+    // Penalty for very generic matches
+    if (confidence > 0 && confidence < 70 && classification.keywords.some(k => ['other', 'miscellaneous', 'general'].includes(k.toLowerCase()))) {
+      confidence = Math.max(30, confidence - 10);
+      matchFactors.push('generic classification penalty');
     }
 
     return Math.round(confidence);
@@ -433,8 +532,11 @@ class AutomationEngine {
     // Account code match
     if (classification.accountCodes) {
       for (const code of classification.accountCodes) {
-        if (accountCode === code.toLowerCase() || accountCode.startsWith(code.toLowerCase())) {
-          reasons.push(`account code matches ${code}`);
+        if (accountCode === code.toLowerCase()) {
+          reasons.push(`exact account code match (${code})`);
+          break;
+        } else if (accountCode.startsWith(code.toLowerCase())) {
+          reasons.push(`account code pattern (${code})`);
           break;
         }
       }
@@ -443,17 +545,33 @@ class AutomationEngine {
     // Pattern match
     for (const pattern of classification.patterns) {
       if (pattern.test(accountName)) {
-        reasons.push('name pattern match');
+        reasons.push('account name pattern match');
         break;
       }
     }
 
-    // Keyword match
+    // Keyword match - find the best matching keyword
+    let bestKeywordMatch = '';
+    let bestMatchType = '';
+    
     for (const keyword of classification.keywords) {
-      if (accountName.includes(keyword.toLowerCase())) {
-        reasons.push(`contains keyword "${keyword}"`);
+      const keywordLower = keyword.toLowerCase();
+      
+      if (accountName === keywordLower) {
+        bestKeywordMatch = keyword;
+        bestMatchType = 'exact match';
         break;
+      } else if (keywordLower.includes(' ') && accountName.includes(keywordLower)) {
+        bestKeywordMatch = keyword;
+        bestMatchType = 'phrase match';
+      } else if (new RegExp(`\\b${keywordLower}\\b`).test(accountName) && !bestMatchType) {
+        bestKeywordMatch = keyword;
+        bestMatchType = 'word match';
       }
+    }
+
+    if (bestKeywordMatch) {
+      reasons.push(`${bestMatchType} for "${bestKeywordMatch}"`);
     }
 
     if (reasons.length === 0) {
