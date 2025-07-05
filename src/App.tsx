@@ -5,7 +5,7 @@ import { Layout } from './components/Layout'
 import { Login } from './components/Login'
 import { Dashboard } from './components/pages/Dashboard'
 import { ProjectSetup } from './components/pages/ProjectSetup'
-import { DataImport } from './components/pages/DataImport'
+import DataImport from './components/features/data-import/DataImport'
 import { AdjustmentsPage } from './components/pages/Adjustments'
 import { DataExport } from './components/pages/DataExport'
 import { ReportEditor } from './components/pages/ReportEditor'
@@ -54,6 +54,7 @@ function AppContent() {
 
   const renderCurrentView = () => {
     const { activePeriodId } = useProjectStore.getState();
+    const { setCurrentView } = useUIStore.getState();
     
     switch (currentView) {
       case 'dashboard':
@@ -61,7 +62,7 @@ function AppContent() {
       case 'project-setup':
         return <ProjectSetup />
       case 'data-import':
-        return <DataImport />
+        return <DataImport onComplete={() => setCurrentView('report-editor')} />
       case 'adjustments':
         return <AdjustmentsPage periodId={activePeriodId || ''} />
       case 'data-export':
