@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { StatementOfFinancialPosition } from "../features/financial-statements/StatementOfFinancialPosition";
 import { StatementOfProfitOrLoss } from "../features/financial-statements/StatementOfProfitOrLoss";
@@ -11,16 +10,17 @@ import { CommentSidebar } from "../features/comments/CommentSidebar";
 import { useProjectStore } from "../../store/projectStore";
 import { Button } from "../ui/Button";
 import { MessageSquare, Upload, Edit3 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import DataImport from '../features/data-import/DataImport';
 
 export function ReportEditor() {
   const { currentProject } = useProjectStore();
-  const { isCommentSidebarOpen, toggleCommentSidebar } = useUIStore();
-  const [isImporting, setIsImporting] = useState(false);
+  const { isCommentSidebarOpen, toggleCommentSidebar, setCurrentView } = useUIStore();
 
   const handleCommentClick = (elementId: string) => {
     toggleCommentSidebar(elementId);
+  };
+
+  const handleImportTrialBalance = () => {
+    setCurrentView('data-import');
   };
 
   if (!currentProject) {
@@ -43,7 +43,7 @@ export function ReportEditor() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button onClick={() => setIsImporting(true)} data-import-trigger>
+            <Button onClick={handleImportTrialBalance} data-import-trigger>
               <Upload className="mr-2 h-4 w-4" />
               Import Trial Balance
             </Button>
@@ -90,14 +90,6 @@ export function ReportEditor() {
           onClose={() => toggleCommentSidebar()}
         />
       )}
-      <Dialog open={isImporting} onOpenChange={setIsImporting}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Import Trial Balance Wizard</DialogTitle>
-          </DialogHeader>
-          <DataImport onComplete={() => setIsImporting(false)} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

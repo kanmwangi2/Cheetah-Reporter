@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
+import { useUIStore } from '@/store/uiStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/Button';
@@ -34,6 +35,7 @@ const renderSection = (section: CashFlowSection, currency: string) => (
 
 export const StatementOfCashFlows: React.FC = () => {
   const { currentProject, activePeriodId } = useProjectStore();
+  const { setCurrentView } = useUIStore();
   const [method, setMethod] = useState<CashFlowMethod>('indirect');
   const [showValidation, setShowValidation] = useState(false);
 
@@ -73,11 +75,7 @@ export const StatementOfCashFlows: React.FC = () => {
             <p className="text-muted-foreground mb-4">Could not calculate Statement of Cash Flows.</p>
             <p className="text-sm text-muted-foreground/80 mb-4">Ensure the trial balance is mapped correctly for this period.</p>
             <Button 
-              onClick={() => {
-                // Trigger the import dialog in the parent ReportEditor
-                const importButton = document.querySelector('[data-import-trigger]') as HTMLButtonElement;
-                if (importButton) importButton.click();
-              }}
+              onClick={() => setCurrentView('data-import')}
               className="mt-2"
             >
               <Upload className="mr-2 h-4 w-4" />

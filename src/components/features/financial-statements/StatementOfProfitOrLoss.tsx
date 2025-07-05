@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useProjectStore } from '@/store/projectStore';
+import { useUIStore } from '@/store/uiStore';
 import type { PeriodData } from '@/types/project';
 import { Commentable } from '../comments/Commentable';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ interface StatementOfProfitOrLossProps {
 
 const StatementOfProfitOrLoss: React.FC<StatementOfProfitOrLossProps> = ({ period }) => {
   const { currentProject, activePeriodId } = useProjectStore();
+  const { setCurrentView } = useUIStore();
   const [adjustedData, setAdjustedData] = useState<{
     totalRevenue: number;
     costOfSales: number;
@@ -98,11 +100,7 @@ const StatementOfProfitOrLoss: React.FC<StatementOfProfitOrLossProps> = ({ perio
         <p className="text-red-600 mb-4">Error loading adjusted data: {error}</p>
         {error.includes('No trial balance data') && (
           <Button 
-            onClick={() => {
-              // Trigger the import dialog in the parent ReportEditor
-              const importButton = document.querySelector('[data-import-trigger]') as HTMLButtonElement;
-              if (importButton) importButton.click();
-            }}
+            onClick={() => setCurrentView('data-import')}
             className="mt-2"
           >
             <Upload className="mr-2 h-4 w-4" />
