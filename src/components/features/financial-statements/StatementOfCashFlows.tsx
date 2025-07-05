@@ -9,6 +9,7 @@ import { Commentable } from '../comments/Commentable';
 import { calculateStatementOfCashFlows, validateCashFlowStatement, type CashFlowMethod } from '@/lib/statementOfCashFlowsCalculations';
 import { formatCurrency } from './financialStatementUtils';
 import type { CashFlowSection, PeriodData } from '@/types/project';
+import { Upload } from 'lucide-react';
 
 const renderSection = (section: CashFlowSection, currency: string) => (
   <React.Fragment key={section.id}>
@@ -69,8 +70,19 @@ export const StatementOfCashFlows: React.FC = () => {
   if (!cashFlowData) {
     return (
         <div className="p-6 text-center bg-muted rounded-lg">
-            <p className="text-muted-foreground">Could not calculate Statement of Cash Flows.</p>
-            <p className="text-sm text-muted-foreground/80">Ensure the trial balance is mapped correctly for this period.</p>
+            <p className="text-muted-foreground mb-4">Could not calculate Statement of Cash Flows.</p>
+            <p className="text-sm text-muted-foreground/80 mb-4">Ensure the trial balance is mapped correctly for this period.</p>
+            <Button 
+              onClick={() => {
+                // Trigger the import dialog in the parent ReportEditor
+                const importButton = document.querySelector('[data-import-trigger]') as HTMLButtonElement;
+                if (importButton) importButton.click();
+              }}
+              className="mt-2"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Import Trial Balance
+            </Button>
         </div>
     );
   }

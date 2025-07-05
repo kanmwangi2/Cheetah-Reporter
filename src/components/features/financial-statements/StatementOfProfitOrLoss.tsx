@@ -3,9 +3,10 @@ import { useProjectStore } from '@/store/projectStore';
 import type { PeriodData } from '@/types/project';
 import { Commentable } from '../comments/Commentable';
 import { cn } from '@/lib/utils';
-import { AlertTriangle, FileText } from 'lucide-react';
+import { AlertTriangle, FileText, Upload } from 'lucide-react';
 import { populateFinancialStatements, validatePopulatedStatements, type StatementLineItem } from '@/lib/statementPopulator';
 import { AdjustedFinancialCalculations } from '@/lib/trialBalanceUtils';
+import { Button } from '@/components/ui/Button';
 
 const formatCurrency = (value: number, currency: string) => {
   const displayCurrency = currency || 'USD';
@@ -47,8 +48,14 @@ const StatementOfProfitOrLoss: React.FC<StatementOfProfitOrLossProps> = ({ perio
 
   useEffect(() => {
     const loadAdjustedData = async () => {
-      if (!activePeriod || !currentProject || !activePeriod.mappedTrialBalance) {
+      if (!activePeriod || !currentProject) {
         setLoading(false);
+        return;
+      }
+
+      if (!activePeriod.mappedTrialBalance) {
+        setLoading(false);
+        setError('No trial balance data found. Please import trial balance data first.');
         return;
       }
 
@@ -88,7 +95,20 @@ const StatementOfProfitOrLoss: React.FC<StatementOfProfitOrLossProps> = ({ perio
     return (
       <div className="p-6 text-center bg-muted rounded-lg border border-red-200">
         <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-        <p className="text-red-600">Error loading adjusted data: {error}</p>
+        <p className="text-red-600 mb-4">Error loading adjusted data: {error}</p>
+        {error.includes('No trial balance data') && (
+          <Button 
+            onClick={() => {
+              // Trigger the import dialog in the parent ReportEditor
+              const importButton = document.querySelector('[data-import-trigger]') as HTMLButtonElement;
+              if (importButton) importButton.click();
+            }}
+            className="mt-2"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Import Trial Balance
+          </Button>
+        )}
       </div>
     );
   }

@@ -6,16 +6,23 @@ import { Button } from '../ui/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card'
 import { Input } from '../ui/Input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { Plus, Search, Calendar, Building, Save, LayoutDashboard, BarChart3 } from 'lucide-react'
+import { Plus, Search, Calendar, Building, Save, LayoutDashboard, BarChart3, Trash2, Upload, MoreVertical } from 'lucide-react'
 import { SaveAsTemplateDialog } from '../features/templates/SaveAsTemplateDialog'
 import { DashboardBuilder } from '../features/dashboards/DashboardBuilder'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import type { Project } from '../../types/project'
 import type { Dashboard as DashboardType } from '../../types/dashboard'
 import { useAuthStore } from '../../store/authStore'
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu'
 
 export const Dashboard: React.FC = () => {
-  const { projects, setCurrentProject, loadUserProjects, loading, error } = useProjectStore()
+  const { projects, setCurrentProject, loadUserProjects, loading, error, deleteProject } = useProjectStore()
   const { 
     dashboards, 
     currentDashboard, 
@@ -32,6 +39,7 @@ export const Dashboard: React.FC = () => {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
   const [selectedProjectIdForTemplate, setSelectedProjectIdForTemplate] = useState<string | null>(null)
   const [showSuccessAlert, setShowSuccessAlert] = useState(false)
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -119,15 +127,32 @@ export const Dashboard: React.FC = () => {
     }
   }
 
-  const handleSaveAsTemplateClick = (e: React.MouseEvent, projectId: string) => {
-    e.stopPropagation()
-    setSelectedProjectIdForTemplate(projectId)
-    setIsTemplateDialogOpen(true)
-  }
-
   const handleTemplateSaveSuccess = () => {
     setShowSuccessAlert(true)
     setTimeout(() => setShowSuccessAlert(false), 5000)
+  }
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      if (user) {
+        try {
+          setDeletingProjectId(projectId)
+          await deleteProject(projectId, user.uid, user.email || '')
+          // Reload projects to reflect the deletion
+          await loadUserProjects(user.uid)
+        } catch (error) {
+          console.error('Failed to delete project:', error)
+          alert('Failed to delete project. Please try again.')
+        } finally {
+          setDeletingProjectId(null)
+        }
+      }
+    }
+  }
+
+  const handleImportData = (project: Project) => {
+    setCurrentProject(project)
+    setCurrentView('data-import')
   }
 
   // If we're in dashboard builder mode, show the builder
@@ -220,15 +245,56 @@ export const Dashboard: React.FC = () => {
                       className="flex flex-col justify-between hover:shadow-md transition-shadow"
                     >
                       <div className="cursor-pointer" onClick={() => handleOpenProject(project)}>
-                        <CardHeader>
-                          <CardTitle className="text-lg">{project.companyName}</CardTitle>
-                          <CardDescription className="flex items-center gap-2 pt-1">
-                            <Calendar className="h-4 w-4" />
-                            {project.periods && project.periods.length > 0 
-                              ? new Date(project.periods[project.periods.length - 1].reportingDate).toLocaleDateString()
-                              : 'No periods'
-                            }
-                          </CardDescription>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-lg truncate">{project.companyName}</CardTitle>
+                              <CardDescription className="flex items-center gap-2 pt-1">
+                                <Calendar className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate">
+                                  {project.periods && project.periods.length > 0 
+                                    ? new Date(project.periods[project.periods.length - 1].reportingDate).toLocaleDateString()
+                                    : 'No periods'
+                                  }
+                                </span>
+                              </CardDescription>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 flex-shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleImportData(project)}>
+                                  <Upload className="mr-2 h-4 w-4" />
+                                  Import Data
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  setSelectedProjectIdForTemplate(project.id)
+                                  setIsTemplateDialogOpen(true)
+                                }}>
+                                  <Save className="mr-2 h-4 w-4" />
+                                  Save as Template
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteProject(project.id)}
+                                  className="text-destructive focus:text-destructive"
+                                  disabled={deletingProjectId === project.id}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  {deletingProjectId === project.id ? 'Deleting...' : 'Delete Project'}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-2">
@@ -251,15 +317,14 @@ export const Dashboard: React.FC = () => {
                           </div>
                         </CardContent>
                       </div>
-                      <CardFooter className="p-4">
+                      <CardFooter className="p-4 pt-0">
                          <Button 
                             variant="outline" 
                             size="sm" 
                             className="w-full"
-                            onClick={(e) => handleSaveAsTemplateClick(e, project.id)}
+                            onClick={() => handleOpenProject(project)}
                           >
-                            <Save className="mr-2 h-4 w-4" />
-                            Save as Template
+                            Open Project
                           </Button>
                       </CardFooter>
                     </Card>

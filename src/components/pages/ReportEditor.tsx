@@ -43,7 +43,7 @@ export function ReportEditor() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button onClick={() => setIsImporting(true)}>
+            <Button onClick={() => setIsImporting(true)} data-import-trigger>
               <Upload className="mr-2 h-4 w-4" />
               Import Trial Balance
             </Button>
