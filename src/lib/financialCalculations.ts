@@ -45,20 +45,21 @@ export const processMappedTrialBalance = (mappedTb: MappedTrialBalance): void =>
   });
 };
 
-const findAndSumLineItem = (line: FinancialStatementLine, key: string): number | null => {
-  if (line.id === key) {
-    return line.total;
-  }
-  if (line.subLines) {
-    for (const subLine of line.subLines) {
-      const result = findAndSumLineItem(subLine, key);
-      if (result !== null) {
-        return result;
-      }
-    }
-  }
-  return null;
-};
+// Helper function to find and sum line items (currently unused but may be needed for future calculations)
+// const findAndSumLineItem = (line: FinancialStatementLine, key: string): number | null => {
+//   if (line.id === key) {
+//     return line.total;
+//   }
+//   if (line.subLines) {
+//     for (const subLine of line.subLines) {
+//       const result = findAndSumLineItem(subLine, key);
+//       if (result !== null) {
+//         return result;
+//       }
+//     }
+//   }
+//   return null;
+// };
 
 // Helper function to find line item total in MappedTrialBalance dictionary structure
 const findLineItemInMappedSection = (section: { [lineItem: string]: TrialBalanceAccount[] }, key: string): number | null => {

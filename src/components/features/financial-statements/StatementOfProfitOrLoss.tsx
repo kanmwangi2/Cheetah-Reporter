@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import type { PeriodData } from '@/types/project';
 import { Commentable } from '../comments/Commentable';
 import { cn } from '@/lib/utils';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, FileText } from 'lucide-react';
 import { populateFinancialStatements, validatePopulatedStatements, type StatementLineItem } from '@/lib/statementPopulator';
+import { AdjustedFinancialCalculations } from '@/lib/trialBalanceUtils';
 
 const formatCurrency = (value: number, currency: string) => {
   const displayCurrency = currency || 'USD';
@@ -20,10 +21,77 @@ interface StatementOfProfitOrLossProps {
 
 const StatementOfProfitOrLoss: React.FC<StatementOfProfitOrLossProps> = ({ period }) => {
   const { currentProject, activePeriodId } = useProjectStore();
+  const [adjustedData, setAdjustedData] = useState<{
+    totalRevenue: number;
+    costOfSales: number;
+    grossProfit: number;
+    operatingExpenses: number;
+    depreciation: number;
+    operatingProfit: number;
+    financeCosts: number;
+    profitBeforeTax: number;
+    netProfit: number;
+    adjustmentSummary: {
+      totalAdjustments: number;
+      [key: string]: unknown;
+    };
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Determine which period to use
   const activePeriod = period || 
     currentProject?.periods.find((p: { id: string }) => p.id === activePeriodId);
+
+  const currency = currentProject?.currency || 'USD';
+
+  useEffect(() => {
+    const loadAdjustedData = async () => {
+      if (!activePeriod || !currentProject || !activePeriod.mappedTrialBalance) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Get adjusted trial balance calculations
+        const adjustedProfitLoss = await AdjustedFinancialCalculations.getStatementOfProfitOrLoss(
+          currentProject.id,
+          activePeriod.id,
+          activePeriod.mappedTrialBalance,
+          activePeriod
+        );
+        
+        setAdjustedData(adjustedProfitLoss);
+      } catch (err) {
+        console.error('Error loading adjusted data:', err);
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAdjustedData();
+  }, [activePeriod, currentProject]);
+
+  if (loading) {
+    return (
+      <div className="p-6 text-center bg-muted rounded-lg">
+        <p className="text-muted-foreground">Loading adjusted trial balance...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center bg-muted rounded-lg border border-red-200">
+        <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+        <p className="text-red-600">Error loading adjusted data: {error}</p>
+      </div>
+    );
+  }
 
   if (!activePeriod) {
     return (
@@ -33,8 +101,119 @@ const StatementOfProfitOrLoss: React.FC<StatementOfProfitOrLossProps> = ({ perio
     );
   }
 
+  // Use adjusted data if available, otherwise fall back to original logic
+  if (adjustedData) {
+    return (
+      <div className="space-y-6">
+        {/* Show adjustment summary if adjustments exist */}
+        {adjustedData.adjustmentSummary && adjustedData.adjustmentSummary.totalAdjustments > 0 && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="text-blue-600" size={16} />
+              <span className="font-medium text-blue-800">Adjusted Trial Balance Applied</span>
+            </div>
+            <p className="text-sm text-blue-700">
+              {adjustedData.adjustmentSummary.totalAdjustments} adjustment(s) applied to this statement.
+            </p>
+          </div>
+        )}
+
+        <div className="bg-white rounded-lg border shadow-sm">
+          <div className="p-6 border-b">
+            <h2 className="text-lg font-semibold">Statement of Profit or Loss</h2>
+            <p className="text-sm text-muted-foreground">For the period ended {activePeriod.reportingDate.toLocaleDateString()}</p>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            {/* Revenue Section */}
+            <Commentable elementId="pol-revenue">
+              <div className="space-y-2">
+                <div className="flex justify-between font-semibold border-b pb-2">
+                  <span>Revenue</span>
+                  <span className="text-green-600">{formatCurrency(adjustedData.totalRevenue, currency)}</span>
+                </div>
+              </div>
+            </Commentable>
+
+            {/* Cost of Sales */}
+            <Commentable elementId="pol-cost-of-sales">
+              <div className="flex justify-between">
+                <span>Cost of Sales</span>
+                <span className="text-red-600">({formatCurrency(adjustedData.costOfSales, currency)})</span>
+              </div>
+            </Commentable>
+
+            {/* Gross Profit */}
+            <Commentable elementId="pol-gross-profit">
+              <div className="flex justify-between font-semibold border-t pt-2">
+                <span>Gross Profit</span>
+                <span className={adjustedData.grossProfit >= 0 ? "text-green-600" : "text-red-600"}>
+                  {formatCurrency(adjustedData.grossProfit, currency)}
+                </span>
+              </div>
+            </Commentable>
+
+            {/* Operating Expenses */}
+            <Commentable elementId="pol-operating-expenses">
+              <div className="flex justify-between">
+                <span>Operating Expenses</span>
+                <span className="text-red-600">({formatCurrency(adjustedData.operatingExpenses, currency)})</span>
+              </div>
+            </Commentable>
+
+            {/* Depreciation */}
+            <Commentable elementId="pol-depreciation">
+              <div className="flex justify-between">
+                <span>Depreciation & Amortization</span>
+                <span className="text-red-600">({formatCurrency(adjustedData.depreciation, currency)})</span>
+              </div>
+            </Commentable>
+
+            {/* Operating Profit */}
+            <Commentable elementId="pol-operating-profit">
+              <div className="flex justify-between font-semibold border-t pt-2">
+                <span>Operating Profit</span>
+                <span className={adjustedData.operatingProfit >= 0 ? "text-green-600" : "text-red-600"}>
+                  {formatCurrency(adjustedData.operatingProfit, currency)}
+                </span>
+              </div>
+            </Commentable>
+
+            {/* Finance Costs */}
+            <Commentable elementId="pol-finance-costs">
+              <div className="flex justify-between">
+                <span>Finance Costs</span>
+                <span className="text-red-600">({formatCurrency(adjustedData.financeCosts, currency)})</span>
+              </div>
+            </Commentable>
+
+            {/* Profit Before Tax */}
+            <Commentable elementId="pol-profit-before-tax">
+              <div className="flex justify-between font-semibold border-t pt-2">
+                <span>Profit Before Tax</span>
+                <span className={adjustedData.profitBeforeTax >= 0 ? "text-green-600" : "text-red-600"}>
+                  {formatCurrency(adjustedData.profitBeforeTax, currency)}
+                </span>
+              </div>
+            </Commentable>
+
+            {/* Net Profit */}
+            <Commentable elementId="pol-net-profit">
+              <div className="flex justify-between font-bold text-lg border-t-2 pt-3 mt-4">
+                <span>Net Profit</span>
+                <span className={adjustedData.netProfit >= 0 ? "text-green-600" : "text-red-600"}>
+                  {formatCurrency(adjustedData.netProfit, currency)}
+                </span>
+              </div>
+            </Commentable>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to original logic if no adjusted data
   const { mappedTrialBalance } = activePeriod;
-  const currency = currentProject?.currency || 'USD';
 
   if (!mappedTrialBalance) {
     return (

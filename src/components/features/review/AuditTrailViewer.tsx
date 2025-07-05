@@ -53,7 +53,11 @@ export const AuditTrailViewer: React.FC = () => {
                   <div key={log.id} className="p-3 bg-background rounded-lg border">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm font-medium">
-                        {format(new Date(log.timestamp?.toDate()), 'PPP p')}
+                        {format(new Date(
+                          typeof log.timestamp === 'object' && log.timestamp && 'toDate' in log.timestamp 
+                            ? (log.timestamp as { toDate(): Date }).toDate() 
+                            : log.timestamp as Date
+                        ), 'PPP p')}
                       </p>
                     </div>
                     {renderLogDetails(log)}

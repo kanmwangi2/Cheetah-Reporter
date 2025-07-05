@@ -102,8 +102,8 @@ export const useProjectStore = create<ProjectState>()(
             get().setCurrentProject(newProject);
             return true;
           }
-        } catch (error: any) {
-          set({ error: error.message, loading: false });
+        } catch (error: unknown) {
+          set({ error: (error as Error).message, loading: false });
           return false;
         }
       },
@@ -125,8 +125,8 @@ export const useProjectStore = create<ProjectState>()(
             get().loadProject(projectId); // Reload project to get the latest state
             await logAuditEvent(projectId, userId, userEmail, 'addPeriod', { periodId: newPeriod.id });
 
-        } catch (error: any) {
-            set({ error: error.message, loading: false });
+        } catch (error: unknown) {
+            set({ error: (error as Error).message, loading: false });
         }
     },
 
@@ -151,8 +151,8 @@ export const useProjectStore = create<ProjectState>()(
             // Reload the project to ensure state is fresh
             await loadProject(currentProject.id);
 
-        } catch (error: any) {
-            set({ error: error.message, loading: false });
+        } catch (error: unknown) {
+            set({ error: (error as Error).message, loading: false });
         }
     },
 

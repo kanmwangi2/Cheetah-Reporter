@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useEffect, useState } from 'react'
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
@@ -36,13 +36,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+export { AuthContext }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
@@ -106,9 +100,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await setDoc(doc(db, 'users', result.user.uid), {
         lastLoginAt: new Date()
       }, { merge: true })
-    } catch (error: any) {
-      console.error('Login error:', error.code, error.message)
-      throw new Error(`Login failed: ${error.message}`)
+    } catch (error: unknown) {
+      console.error('Login error:', error)
+      const errorMessage = (error as { message?: string })?.message || 'Login failed'
+      throw new Error(`Login failed: ${errorMessage}`)
     }
   }
 
@@ -139,9 +134,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Creating user profile in Firestore:', userProfile)
       await setDoc(doc(db, 'users', result.user.uid), userProfile)
       setUserProfile(userProfile)
-    } catch (error: any) {
-      console.error('Registration error:', error.code, error.message)
-      throw new Error(`Registration failed: ${error.message}`)
+    } catch (error: unknown) {
+      console.error('Registration error:', error)
+      const errorMessage = (error as { message?: string })?.message || 'Registration failed'
+      throw new Error(`Registration failed: ${errorMessage}`)
     }
   }
 
@@ -154,9 +150,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Sending password reset email to:', email)
       await sendPasswordResetEmail(auth, email.trim())
       console.log('Password reset email sent successfully')
-    } catch (error: any) {
-      console.error('Password reset error:', error.code, error.message)
-      throw new Error(`Password reset failed: ${error.message}`)
+    } catch (error: unknown) {
+      console.error('Password reset error:', error)
+      const errorMessage = (error as { message?: string })?.message || 'Password reset failed'
+      throw new Error(`Password reset failed: ${errorMessage}`)
     }
   }
 

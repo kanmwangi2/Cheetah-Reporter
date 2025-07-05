@@ -2,7 +2,7 @@
 
 This document outlines all remaining implementation steps required to fully align the Cheetah Reporter application with the blueprint specifications.
 
-## Remaining Implementation Steps (50 Features)
+## Remaining Implementation Steps (48 Features)
 
 ### Phase 1: Financial Statement Enhancements (Priority 1)
 
@@ -117,14 +117,6 @@ This document outlines all remaining implementation steps required to fully alig
   - Support for ratio-based validations
 - **Files:** `src/lib/crossStatementValidator.ts`
 
-#### 18. Regulatory Compliance Checker
-- **Description:** Automated compliance checking for various standards
-- **Implementation:**
-  - Implement IFRS compliance rules
-  - Create country-specific requirements
-  - Support for custom compliance frameworks
-- **Files:** `src/lib/complianceChecker.ts`
-
 #### 19. Quality Score and Recommendations
 - **Description:** Automated quality assessment with improvement suggestions
 - **Implementation:**
@@ -188,15 +180,6 @@ This document outlines all remaining implementation steps required to fully alig
   - Add visualization tools
   - Support for custom peer groups
 - **Files:** `src/lib/benchmarkingService.ts`
-
-#### 26. Interactive Dashboards
-- **Description:** Customizable dashboards with real-time updates
-- **Implementation:**
-  - Create dashboard builder
-  - Implement widget system
-  - Add real-time data updates
-  - Support for dashboard sharing
-- **Files:** Update `Dashboard.tsx`, create dashboard components
 
 #### 27. Data Visualization Suite
 - **Description:** Advanced charting and visualization tools
@@ -535,6 +518,6 @@ This document outlines all remaining implementation steps required to fully alig
 
 ---
 *Last updated: July 5, 2025*
-*Total features remaining: 50*
-*Total features completed: 8 (Smart Account Matching, Multi-Period Data Management, Data Export/Import Enhancements, Dynamic Disclosure Generation, Enhanced Cash Flow Calculations, Statement of Changes in Equity Enhancements, Financial Ratio Analysis Suite, Statement Linking and Cross-References)*
+*Total features remaining: 48*
+*Total features completed: 11 (Smart Account Matching, Multi-Period Data Management, Data Export/Import Enhancements, Dynamic Disclosure Generation, Enhanced Cash Flow Calculations, Statement of Changes in Equity Enhancements, Financial Ratio Analysis Suite, Statement Linking and Cross-References, Regulatory Compliance Checker, Interactive Dashboards, Journal Entries & Adjustments System)*
 *Estimated completion time: 8-14 months with proper prioritization*

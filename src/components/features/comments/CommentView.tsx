@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import type { Comment } from '../../../types/project';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/useAuth';
 import { useCommentStore } from '../../../store/commentStore';
 import { Button } from '../../ui/Button';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';

@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AuthProvider } from './contexts/AuthContext'
+import { useAuth } from './contexts/useAuth'
 import { Layout } from './components/Layout'
 import { Login } from './components/Login'
 import { Dashboard } from './components/pages/Dashboard'
 import { ProjectSetup } from './components/pages/ProjectSetup'
 import { DataImport } from './components/pages/DataImport'
+import { AdjustmentsPage } from './components/pages/Adjustments'
 import { DataExport } from './components/pages/DataExport'
 import { ReportEditor } from './components/pages/ReportEditor'
 import { Preview } from './components/pages/Preview'
@@ -51,6 +53,8 @@ function AppContent() {
   }
 
   const renderCurrentView = () => {
+    const { activePeriodId } = useProjectStore.getState();
+    
     switch (currentView) {
       case 'dashboard':
         return <Dashboard />
@@ -58,6 +62,8 @@ function AppContent() {
         return <ProjectSetup />
       case 'data-import':
         return <DataImport />
+      case 'adjustments':
+        return <AdjustmentsPage periodId={activePeriodId || ''} />
       case 'data-export':
         return <DataExport />
       case 'disclosures':

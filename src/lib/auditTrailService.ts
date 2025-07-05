@@ -3,7 +3,7 @@ import { db } from "./firebase";
 
 export interface AuditLog {
   id?: string;
-  timestamp: any;
+  timestamp: Date | object; // Can be Firestore serverTimestamp or Date
   userId: string;
   userEmail: string; // Store user email for easier display
   action: string;

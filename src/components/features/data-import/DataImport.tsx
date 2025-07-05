@@ -41,13 +41,13 @@ const DataImport: React.FC<DataImportProps> = ({ onComplete }) => {
       Papa.parse(selectedFile, {
         complete: (results) => {
           const { headers: csvHeaders, data } = analyzeCsvStructure(results.data);
-          setParsedData(data);
-          setHeaders(csvHeaders);
-          const suggestions = suggestColumnMappings(csvHeaders);
+          setParsedData(data as string[][]);
+          setHeaders(csvHeaders as string[]);
+          const suggestions = suggestColumnMappings(csvHeaders as string[]);
           setColumnSuggestions(suggestions);
           
           const initialMap: { [key: string]: keyof TrialBalanceAccount | '' } = {};
-          csvHeaders.forEach((header: string) => initialMap[header] = '');
+          (csvHeaders as string[]).forEach((header: string) => initialMap[header] = '');
           suggestions.forEach(suggestion => {
             if (suggestion.confidence === 'high') {
               initialMap[suggestion.csvColumn] = suggestion.suggestedField;

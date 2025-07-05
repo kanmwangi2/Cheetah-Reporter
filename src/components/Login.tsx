@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff, Mail, Lock, User, Building, X } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/useAuth'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
 import { Card } from './ui/Card'
@@ -69,10 +69,10 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
         })
       }
       onSuccess?.()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Form submission error:', err)
       // Extract Firebase error message
-      let errorMessage = err.message || 'An error occurred'
+      let errorMessage = (err as Error)?.message || 'An error occurred'
       
       // Handle specific Firebase errors
       if (errorMessage.includes('auth/email-already-in-use')) {
@@ -115,9 +115,9 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
       setResetMessage('Password reset email sent! Check your inbox and follow the instructions to reset your password.')
       setShowResetPassword(false)
       setResetEmail('')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Password reset error:', err)
-      let errorMessage = err.message || 'Failed to send password reset email'
+      let errorMessage = (err as Error)?.message || 'Failed to send password reset email'
       
       if (errorMessage.includes('auth/user-not-found')) {
         errorMessage = 'No account found with this email address.'

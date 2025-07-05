@@ -10,32 +10,35 @@ import {
   where, 
   onSnapshot,
   serverTimestamp,
-  Timestamp 
+  Timestamp,
+  DocumentSnapshot
 } from 'firebase/firestore'
 import { db } from './firebase'
 import type { PeriodData, Project } from '../types/project'
 
 // Convert Firestore data to Project
-const convertFirestoreProject = (doc: any): Project => {
+const convertFirestoreProject = (doc: DocumentSnapshot): Project => {
   const data = doc.data()
+  if (!data) throw new Error('Document data is undefined')
+  
   return {
     ...data,
     id: doc.id,
-    periods: data.periods?.map((p: any) => ({
+    periods: data.periods?.map((p: Record<string, unknown>) => ({
       ...p,
-      reportingDate: p.reportingDate?.toDate() || new Date(),
+      reportingDate: (p.reportingDate as Timestamp)?.toDate() || new Date(),
     })) || [],
-    createdAt: data.createdAt?.toDate() || new Date(),
-    updatedAt: data.updatedAt?.toDate() || new Date(),
-  }
+    createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+    updatedAt: (data.updatedAt as Timestamp)?.toDate() || new Date(),
+  } as Project
 }
 
 // Convert Project to Firestore data
 const convertProjectToFirestore = (project: Partial<Omit<Project, 'id'>>) => {
-  const data: any = { ...project };
+  const data: Record<string, unknown> = { ...project };
 
   if (data.periods) {
-    data.periods = data.periods.map((p: PeriodData) => ({
+    data.periods = (data.periods as PeriodData[]).map((p: PeriodData) => ({
       ...p,
       reportingDate: Timestamp.fromDate(p.reportingDate),
     }));
@@ -123,7 +126,8 @@ export class ProjectService {
     const docRef = doc(db, this.COLLECTION, projectId)
     const updateData = convertProjectToFirestore(updates);
     
-    await updateDoc(docRef, updateData)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await updateDoc(docRef, updateData as any)
   }
 
   // Delete a project

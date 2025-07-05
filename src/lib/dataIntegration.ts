@@ -60,7 +60,7 @@ export const STATEMENT_LINE_ITEMS = MAPPING_RULES.reduce((acc, rule) => {
  * @param parsedData - Data from PapaParse.
  * @returns An analysis of the CSV structure.
  */
-export const analyzeCsvStructure = (parsedData: any[]) => {
+export const analyzeCsvStructure = (parsedData: unknown[]) => {
   // Placeholder for logic to detect headers, data types, etc.
   // For now, it assumes the first row is the header.
   if (parsedData.length === 0) {
@@ -113,6 +113,7 @@ export const suggestColumnMappings = (headers: string[]): MappingSuggestion[] =>
  */
 export const suggestAccountMappings = (
   unmappedAccounts: TrialBalanceAccount[],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _existingMappings: MappedTrialBalance // Note: existingMappings is not used yet, but will be for learning
 ): AccountMappingSuggestion[] => {
   const suggestions: AccountMappingSuggestion[] = [];

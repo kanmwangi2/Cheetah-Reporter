@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { User, Settings, LogOut, ChevronDown } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/useAuth'
 import { useUIStore } from '../store/uiStore'
 
 export const UserAvatar: React.FC = () => {

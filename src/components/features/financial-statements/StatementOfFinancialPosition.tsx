@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import type { PeriodData } from '@/types/project';
 import { Commentable } from '../comments/Commentable';
-import { cn } from '@/lib/utils';
-import { populateFinancialStatements, validatePopulatedStatements, type StatementLineItem } from '@/lib/statementPopulator';
+import { AdjustedFinancialCalculations } from '@/lib/trialBalanceUtils';
+import { AlertTriangle, FileText } from 'lucide-react';
 
 const formatCurrency = (value: number, currency: string) => {
   // Fallback to USD if currency is not provided
@@ -16,55 +16,75 @@ const formatCurrency = (value: number, currency: string) => {
   }).format(value);
 };
 
-const renderLine = (line: StatementLineItem, currency: string, isSubLine = false, isBold = false) => {
-  if (!line || typeof line.value === 'undefined') return null;
-
-  const hasSubLines = line.subItems && line.subItems.length > 0;
-
-  return (
-    <div key={line.id} className={cn(isSubLine ? 'ml-4' : 'mt-4')}>
-      <Commentable elementId={line.id}>
-        <div className="p-2 rounded-md hover:bg-muted/50 flex justify-between items-center cursor-pointer">
-          <span className={cn(isBold ? 'font-bold' : !hasSubLines && 'font-medium')}>
-            {line.name}
-          </span>
-          <span className={cn('font-mono', isBold ? 'font-bold' : 'text-muted-foreground')}>
-            {formatCurrency(line.value, currency)}
-          </span>
-        </div>
-      </Commentable>
-      {hasSubLines && (
-        <div className="mt-1 border-l-2 border-muted/50 pl-2">
-          {line.subItems?.map(subLine => renderLine(subLine, currency, true))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const StatementOfFinancialPosition: React.FC = () => {
   const { currentProject, activePeriodId } = useProjectStore();
+  const [adjustedData, setAdjustedData] = useState<{
+    currentAssets: number;
+    nonCurrentAssets: number;
+    totalAssets: number;
+    currentLiabilities: number;
+    nonCurrentLiabilities: number;
+    totalLiabilities: number;
+    totalEquity: number;
+    totalLiabilitiesAndEquity: number;
+    adjustmentSummary: {
+      totalAdjustments: number;
+      [key: string]: unknown;
+    };
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const activePeriod = currentProject?.periods.find((p: PeriodData) => p.id === activePeriodId);
+  const currency = currentProject?.currency || 'USD';
 
-  const { statements, validation } = useMemo(() => {
-    if (!currentProject || !activePeriod?.mappedTrialBalance) {
-      return { statements: null, validation: null };
-    }
+  useEffect(() => {
+    const loadAdjustedData = async () => {
+      if (!activePeriod || !currentProject || !activePeriod.mappedTrialBalance) {
+        setLoading(false);
+        return;
+      }
 
-    const populated = populateFinancialStatements(activePeriod.mappedTrialBalance, {
-      ifrsStandard: currentProject.ifrsStandard,
-      currency: currentProject.currency,
-      roundingPrecision: 1,
-      includeZeroBalances: false,
-      aggregateSmallBalances: true,
-      smallBalanceThreshold: 10000
-    });
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Get adjusted trial balance calculations
+        const adjustedFinancialPosition = await AdjustedFinancialCalculations.getStatementOfFinancialPosition(
+          currentProject.id,
+          activePeriod.id,
+          activePeriod.mappedTrialBalance,
+          activePeriod
+        );
+        
+        setAdjustedData(adjustedFinancialPosition);
+      } catch (err) {
+        console.error('Error loading adjusted data:', err);
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    const validation = validatePopulatedStatements(populated);
+    loadAdjustedData();
+  }, [activePeriod, currentProject]);
 
-    return { statements: populated, validation };
-  }, [currentProject, activePeriod]);
+  if (loading) {
+    return (
+      <div className="p-6 text-center bg-muted rounded-lg">
+        <p className="text-muted-foreground">Loading adjusted trial balance...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center bg-muted rounded-lg border border-red-200">
+        <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+        <p className="text-red-600">Error loading adjusted data: {error}</p>
+      </div>
+    );
+  }
 
   if (!currentProject) {
     return <div className="p-4 animate-pulse">Loading project data...</div>;
@@ -79,82 +99,136 @@ export const StatementOfFinancialPosition: React.FC = () => {
     );
   }
 
-  if (!statements) {
+  // Use adjusted data if available
+  if (adjustedData) {
     return (
-      <div className="p-6 text-center bg-muted rounded-lg">
-        <p className="text-muted-foreground">Trial balance for this period has not been mapped yet.</p>
-        <p className="text-sm text-muted-foreground/80">Please complete the mapping process to see the financial statement.</p>
+      <div className="space-y-6">
+        {/* Show adjustment summary if adjustments exist */}
+        {adjustedData.adjustmentSummary && adjustedData.adjustmentSummary.totalAdjustments > 0 && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="text-blue-600" size={16} />
+              <span className="font-medium text-blue-800">Adjusted Trial Balance Applied</span>
+            </div>
+            <p className="text-sm text-blue-700">
+              {adjustedData.adjustmentSummary.totalAdjustments} adjustment(s) applied to this statement.
+            </p>
+          </div>
+        )}
+
+        <div className="bg-white rounded-lg border shadow-sm">
+          <div className="p-6 border-b">
+            <h2 className="text-lg font-semibold">Statement of Financial Position</h2>
+            <p className="text-sm text-muted-foreground">As at {activePeriod.reportingDate.toLocaleDateString()}</p>
+          </div>
+          
+          <div className="p-6 space-y-6">
+            {/* ASSETS */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-gray-900">ASSETS</h3>
+              
+              {/* Current Assets */}
+              <Commentable elementId="sfp-current-assets">
+                <div className="space-y-2">
+                  <div className="flex justify-between font-semibold">
+                    <span>Current Assets</span>
+                    <span>{formatCurrency(adjustedData.currentAssets, currency)}</span>
+                  </div>
+                </div>
+              </Commentable>
+
+              {/* Non-Current Assets */}
+              <Commentable elementId="sfp-non-current-assets">
+                <div className="space-y-2">
+                  <div className="flex justify-between font-semibold">
+                    <span>Non-Current Assets</span>
+                    <span>{formatCurrency(adjustedData.nonCurrentAssets, currency)}</span>
+                  </div>
+                </div>
+              </Commentable>
+
+              {/* Total Assets */}
+              <Commentable elementId="sfp-total-assets">
+                <div className="flex justify-between font-bold text-lg border-t-2 pt-2">
+                  <span>TOTAL ASSETS</span>
+                  <span>{formatCurrency(adjustedData.totalAssets, currency)}</span>
+                </div>
+              </Commentable>
+            </div>
+
+            {/* LIABILITIES AND EQUITY */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-gray-900">LIABILITIES AND EQUITY</h3>
+              
+              {/* Current Liabilities */}
+              <Commentable elementId="sfp-current-liabilities">
+                <div className="space-y-2">
+                  <div className="flex justify-between font-semibold">
+                    <span>Current Liabilities</span>
+                    <span>{formatCurrency(adjustedData.currentLiabilities, currency)}</span>
+                  </div>
+                </div>
+              </Commentable>
+
+              {/* Non-Current Liabilities */}
+              <Commentable elementId="sfp-non-current-liabilities">
+                <div className="space-y-2">
+                  <div className="flex justify-between font-semibold">
+                    <span>Non-Current Liabilities</span>
+                    <span>{formatCurrency(adjustedData.nonCurrentLiabilities, currency)}</span>
+                  </div>
+                </div>
+              </Commentable>
+
+              {/* Total Liabilities */}
+              <Commentable elementId="sfp-total-liabilities">
+                <div className="flex justify-between font-semibold border-t pt-2">
+                  <span>Total Liabilities</span>
+                  <span>{formatCurrency(adjustedData.totalLiabilities, currency)}</span>
+                </div>
+              </Commentable>
+
+              {/* Total Equity */}
+              <Commentable elementId="sfp-total-equity">
+                <div className="flex justify-between font-semibold">
+                  <span>Total Equity</span>
+                  <span>{formatCurrency(adjustedData.totalEquity, currency)}</span>
+                </div>
+              </Commentable>
+
+              {/* Total Liabilities and Equity */}
+              <Commentable elementId="sfp-total-liabilities-equity">
+                <div className="flex justify-between font-bold text-lg border-t-2 pt-2">
+                  <span>TOTAL LIABILITIES AND EQUITY</span>
+                  <span>{formatCurrency(adjustedData.totalLiabilitiesAndEquity, currency)}</span>
+                </div>
+              </Commentable>
+
+              {/* Balance Check */}
+              {Math.abs(adjustedData.totalAssets - adjustedData.totalLiabilitiesAndEquity) > 0.01 && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="text-red-600" size={16} />
+                    <span className="font-medium text-red-800">Balance Sheet Imbalance</span>
+                  </div>
+                  <p className="text-sm text-red-700 mt-1">
+                    Assets and liabilities+equity do not balance. 
+                    Difference: {formatCurrency(adjustedData.totalAssets - adjustedData.totalLiabilitiesAndEquity, currency)}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const { balanceSheet } = statements;
-  const currency = currentProject.currency;
-
+  // Fallback to original logic if no adjusted data available
   return (
-    <div className="p-4 bg-background rounded-lg shadow-sm">
-      <h2 className="text-2xl font-bold mb-6 text-center">Statement of Financial Position</h2>
-      
-      {/* Validation Warnings */}
-      {validation && !validation.isValid && (
-        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-          <h4 className="font-semibold text-destructive mb-2">Statement Validation Issues:</h4>
-          <ul className="text-sm text-destructive space-y-1">
-            {validation.errors.map((error, index) => (
-              <li key={index}>• {error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      
-      {validation && validation.warnings.length > 0 && (
-        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-          <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Validation Warnings:</h4>
-          <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-            {validation.warnings.map((warning, index) => (
-              <li key={index}>• {warning}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-        <div>
-          <h3 className="text-xl font-bold mb-4 text-accent-foreground border-b-2 pb-2">Assets</h3>
-          {balanceSheet.assets.map(asset => renderLine(asset, currency, false, asset.level === 0))}
-          <div className="mt-6 pt-4 border-t-2 font-bold flex justify-between items-center">
-            <span>Total Assets</span>
-            <span>{formatCurrency(balanceSheet.totals.totalAssets, currency)}</span>
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="text-xl font-bold mb-4 text-accent-foreground border-b-2 pb-2">Equity and Liabilities</h3>
-          
-          <div className="mb-6">
-            <h4 className="text-lg font-semibold mb-2">Equity</h4>
-            {balanceSheet.equity.map(equity => renderLine(equity, currency, false, equity.level === 0))}
-            <div className="mt-2 pt-2 border-t font-semibold flex justify-between items-center">
-              <span>Total Equity</span>
-              <span>{formatCurrency(balanceSheet.totals.totalEquity, currency)}</span>
-            </div>
-          </div>
-          
-          <div className="mb-6">
-            <h4 className="text-lg font-semibold mb-2">Liabilities</h4>
-            {balanceSheet.liabilities.map(liability => renderLine(liability, currency, false, liability.level === 0))}
-            <div className="mt-2 pt-2 border-t font-semibold flex justify-between items-center">
-              <span>Total Liabilities</span>
-              <span>{formatCurrency(balanceSheet.totals.totalLiabilities, currency)}</span>
-            </div>
-          </div>
-          
-          <div className="mt-6 pt-4 border-t-2 font-bold flex justify-between items-center">
-            <span>Total Equity and Liabilities</span>
-            <span>{formatCurrency(balanceSheet.totals.totalEquity + balanceSheet.totals.totalLiabilities, currency)}</span>
-          </div>
-        </div>
-      </div>
+    <div className="p-6 text-center bg-muted rounded-lg">
+      <p className="text-muted-foreground">Unable to load adjusted financial position data.</p>
+      <p className="text-sm text-muted-foreground/80">Please check the trial balance mapping and try again.</p>
     </div>
   );
 };

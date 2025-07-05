@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/useAuth';
 import { useCommentStore } from '../../../store/commentStore';
 import { Button } from '../../ui/Button';
 import { Textarea } from '../../ui/textarea';

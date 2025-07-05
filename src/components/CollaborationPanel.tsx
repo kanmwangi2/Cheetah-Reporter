@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useProjectStore } from '../store/projectStore'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/useAuth'
 import { Button } from './ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { Input } from './ui/Input'

@@ -13,6 +13,13 @@ Select between "Full IFRS" or "IFRS for SMEs" at the project level, with corresp
 - Import trial balance (TB) from CSV files
 - Intuitive interface to map TB accounts to financial statement line items
 - Validate TB (debits must equal credits)
+- **Journal Entries & Adjustments System**
+  - Create and manage post-import adjusting journal entries
+  - Support for multiple entry types (adjustments, reclassifications, accruals, etc.)
+  - Real-time balance validation with auto-balance functionality
+  - Approval workflow (Draft → Review → Approval → Posted)
+  - Comprehensive filtering and search capabilities
+  - Integration with financial statements using adjusted trial balance
 
 ### Statement Generation
 Automatically generate drafts of:
@@ -95,16 +102,30 @@ The application will be a Single Page Application (SPA) with different views ren
 
 **Data:** The parsed CSV data is held in the Zustand store. Once mapping is complete, the mapped structure is saved to the project document in Firestore.
 
-### Page 4: Report Editor (Multi-tab Interface)
+### Page 4: Journal Entries & Adjustments
+**Description:** A comprehensive interface for managing post-import adjusting entries.
+
+**Features:**
+- **Summary Dashboard:** Display total entries, approved entries, and total debit/credit adjustments
+- **Entry Management:** Create, edit, view, and delete journal entries with multi-line support
+- **Entry Types:** Support for adjustments, reclassifications, accruals, prepayments, depreciation, provisions, year-end, and other entries
+- **Workflow:** Draft → Pending Review → Pending Approval → Approved → Posted status progression
+- **Validation:** Real-time balance validation ensuring debits equal credits, with auto-balance functionality
+- **Filtering:** Filter entries by status, type, date range, and search text
+- **Account Selection:** Choose from mapped trial balance accounts with intuitive dropdown interface
+
+**Data:** Journal entries are stored in Firestore with full audit trail. The adjusted trial balance is calculated and used for financial statement generation.
+
+### Page 5: Report Editor (Multi-tab Interface)
 **Description:** The main workspace for building the report.
 
 **Features:**
 - **Tabs:** SFP, P&L/OCI, SOCE, SCF, Notes
-- **Financial Statement Tabs:** Displays the respective statements with numbers populated from the mapped TB
+- **Financial Statement Tabs:** Displays the respective statements with numbers populated from the adjusted trial balance
 - **Notes & Disclosures Tab:** A sidebar with a checklist of disclosures and a main editor for the selected note
 - **Collaboration:** A "Share" button in the header to invite other users. An activity feed showing recent changes
 
-### Page 5: Preview & Export
+### Page 6: Preview & Export
 **Description:** A read-only, paginated preview of the final report.
 
 **Features:**
@@ -268,14 +289,15 @@ Store user-generated templates for reuse across projects.
 ### Component Structure
 
 **Core Components:**
-- **`components/pages/`:** Dashboard, ProjectSetup, DataImport, ReportEditor, Preview
-- **`components/features/`:** Financial statements, notes, comments, collaboration, templates
+- **`components/pages/`:** Dashboard, ProjectSetup, DataImport, Adjustments, ReportEditor, Preview
+- **`components/features/`:** Financial statements, notes, comments, collaboration, templates, adjustments
 - **`components/ui/`:** Reusable UI components (buttons, inputs, modals, etc.)
 
 **New Feature Components:**
 - **`features/collaboration/`:** InviteUserModal, UserRolesManager
 - **`features/review/`:** CommentSidebar, AuditTrailViewer
 - **`features/data-import/`:** AccountMappingInterface
+- **`features/adjustments/`:** JournalEntryDialog, AdjustmentsSummary
 
 ### State Management (Zustand)
 - **`useProjectStore`:** Handle project data and real-time Firestore listeners

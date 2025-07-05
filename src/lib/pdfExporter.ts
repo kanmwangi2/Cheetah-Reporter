@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import { type Project, type PeriodData } from '../types/project'
+import { type Project, type PeriodData, type TrialBalanceAccount } from '../types/project'
 import { formatCurrency } from './utils'
 
 interface PDFExportOptions {
@@ -51,36 +51,32 @@ export class PDFExporter {
       const margin = 20
       const contentWidth = pageWidth - (2 * margin)
 
-      let yPosition = margin
+      const yPosition = margin
 
       // Title page
-      yPosition = this.addTitlePage(pdf, margin, yPosition, contentWidth)
+      this.addTitlePage(pdf, margin, yPosition, contentWidth)
       
       // Statement of Financial Position
       pdf.addPage()
-      yPosition = margin
-      yPosition = await this.addStatementOfFinancialPosition(pdf, margin, yPosition, contentWidth)
+      await this.addStatementOfFinancialPosition(pdf, margin, margin, contentWidth)
 
       // Statement of Profit or Loss
       pdf.addPage()
-      yPosition = margin
-      yPosition = await this.addStatementOfProfitOrLoss(pdf, margin, yPosition, contentWidth)
+      await this.addStatementOfProfitOrLoss(pdf, margin, margin, contentWidth)
 
       // Statement of Changes in Equity
       pdf.addPage()
-      yPosition = margin
-      yPosition = await this.addStatementOfChangesInEquity(pdf, margin, yPosition, contentWidth)
+      await this.addStatementOfChangesInEquity(pdf, margin, margin, contentWidth)
 
       // Statement of Cash Flows
       pdf.addPage()
-      yPosition = margin
-      yPosition = await this.addStatementOfCashFlows(pdf, margin, yPosition, contentWidth)
+      await this.addStatementOfCashFlows(pdf, margin, margin, contentWidth)
 
       // Notes (if included)
       if (this.options.includeNotes) {
         pdf.addPage()
-        yPosition = margin
-        yPosition = await this.addNotes(pdf, margin, yPosition, contentWidth)
+        // Reset position for notes page  
+        await this.addNotes(pdf, margin, margin, contentWidth)
       }
 
       // Add page numbers
@@ -550,12 +546,13 @@ export class PDFExporter {
     const trialBalance = this.activePeriod.trialBalance.rawData
     
     const getAccountsByCategory = (keywords: string[], isCredit = false) => {
-      return trialBalance.filter((item: any) => 
+      return trialBalance.filter((item: TrialBalanceAccount) => 
         keywords.some((keyword: string) => 
-          item.accountName.toLowerCase().includes(keyword.toLowerCase())
+          item.accountName?.toLowerCase().includes(keyword.toLowerCase())
         )
-      ).reduce((sum: number, item: any) => {
-        return sum + (isCredit ? Math.abs(item.balance) : item.balance)
+      ).reduce((sum: number, item: TrialBalanceAccount) => {
+        const balance = item.debit - item.credit
+        return sum + (isCredit ? Math.abs(balance) : balance)
       }, 0)
     }
 
