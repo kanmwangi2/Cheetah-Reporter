@@ -75,7 +75,13 @@ export const StatementOfCashFlows: React.FC = () => {
             <p className="text-muted-foreground mb-4">Could not calculate Statement of Cash Flows.</p>
             <p className="text-sm text-muted-foreground/80 mb-4">Ensure the trial balance is mapped correctly for this period.</p>
             <Button 
-              onClick={() => setCurrentView('data-import')}
+              onClick={() => {
+                if (currentProject) {
+                  setCurrentView('data-import');
+                } else {
+                  alert('No project selected. Please go to the Dashboard and select a project first.');
+                }
+              }}
               className="mt-2"
             >
               <Upload className="mr-2 h-4 w-4" />

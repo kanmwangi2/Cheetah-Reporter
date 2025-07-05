@@ -100,7 +100,13 @@ const StatementOfProfitOrLoss: React.FC<StatementOfProfitOrLossProps> = ({ perio
         <p className="text-red-600 mb-4">Error loading adjusted data: {error}</p>
         {error.includes('No trial balance data') && (
           <Button 
-            onClick={() => setCurrentView('data-import')}
+            onClick={() => {
+              if (currentProject) {
+                setCurrentView('data-import');
+              } else {
+                alert('No project selected. Please go to the Dashboard and select a project first.');
+              }
+            }}
             className="mt-2"
           >
             <Upload className="mr-2 h-4 w-4" />

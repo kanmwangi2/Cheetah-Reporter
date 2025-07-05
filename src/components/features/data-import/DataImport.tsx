@@ -35,6 +35,27 @@ const DataImport: React.FC<DataImportProps> = ({ onComplete }) => {
     [currentProject, activePeriodId]
   );
 
+  // Add error handling for missing project or period
+  if (!currentProject) {
+    return (
+      <div className="p-6 text-center">
+        <h2 className="text-xl font-semibold mb-4">No Project Selected</h2>
+        <p className="text-muted-foreground mb-4">Please select a project from the Dashboard before importing trial balance data.</p>
+        <Button onClick={onComplete}>Go Back to Dashboard</Button>
+      </div>
+    );
+  }
+
+  if (!activePeriodId) {
+    return (
+      <div className="p-6 text-center">
+        <h2 className="text-xl font-semibold mb-4">No Reporting Period Selected</h2>
+        <p className="text-muted-foreground mb-4">Please select a reporting period in your project before importing trial balance data.</p>
+        <Button onClick={onComplete}>Go Back</Button>
+      </div>
+    );
+  }
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0];
     if (selectedFile) {

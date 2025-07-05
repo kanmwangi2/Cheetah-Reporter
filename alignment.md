@@ -551,11 +551,13 @@ This document outlines all remaining implementation steps required to fully alig
   - Improved error states in financial statements
 
 ### Report Editor Trial Balance Import Fix ✅
-- **Issue:** When projects defaulted to report-editor view without trial balance data, financial statements showed blank screens
+- **Issue:** When projects defaulted to report-editor view without trial balance data, financial statements showed blank screens. The "Import Trial Balance" buttons in report editor and financial statements were using a broken dialog approach that didn't work.
 - **Solution:**
+  - Removed broken dialog-based DataImport component from ReportEditor
+  - Updated all "Import Trial Balance" buttons to navigate to the working 'data-import' view
+  - Replaced DOM manipulation hacks with proper setCurrentView navigation calls  
   - Enhanced StatementOfFinancialPosition, StatementOfProfitOrLoss, and StatementOfCashFlows components
-  - Added proper error handling and empty state messaging
-  - Implemented "Import Trial Balance" buttons that trigger the import dialog
-  - Users now get clear guidance to import data when viewing empty financial statements
+  - Fixed Dashboard dropdown-menu import path issue
+  - All import functionality now uses the same working data-import workflow
 - **Status:** Fixed and deployed to Firebase
-- **Impact:** No more blank screens, users are guided to import trial balance data
+- **Impact:** All trial balance import buttons now work consistently using the proven data-import view workflow

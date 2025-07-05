@@ -20,7 +20,11 @@ export function ReportEditor() {
   };
 
   const handleImportTrialBalance = () => {
-    setCurrentView('data-import');
+    if (currentProject) {
+      setCurrentView('data-import');
+    } else {
+      alert('No project selected. Please go to the Dashboard and select a project first.');
+    }
   };
 
   if (!currentProject) {
