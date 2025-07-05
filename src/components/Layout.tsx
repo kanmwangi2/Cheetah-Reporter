@@ -16,10 +16,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'project-setup', label: 'New Project', icon: FolderOpen },
     { id: 'data-import', label: 'Data Import', icon: FileText },
-    { id: 'adjustments', label: 'Adjustments', icon: Calculator },
+    { id: 'trial-balance-editor', label: 'Trial Balance', icon: Calculator },
+    { id: 'adjustments', label: 'Adjustments', icon: Edit3 },
     { id: 'data-export', label: 'Export & Import', icon: Download },
     { id: 'disclosures', label: 'Disclosures', icon: BookOpen },
-    { id: 'report-editor', label: 'Report Editor', icon: Edit3 },
+    { id: 'report-editor', label: 'Report Editor', icon: FileText },
     { id: 'preview', label: 'Preview', icon: Eye },
     { id: 'collaboration', label: 'Collaboration', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -40,10 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Button>
           
           <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CR</span>
-            </div>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Cheetah Reporter</h1>
+            <img src="/logo.svg" alt="Cheetah Reporter" className="h-8 w-auto" />
           </div>
 
           <div className="ml-auto flex items-center space-x-2">

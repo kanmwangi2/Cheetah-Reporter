@@ -1,4 +1,4 @@
-import type { TrialBalanceData, StatementOfChangesInEquityData, EquityComponent } from '../types/project';
+import type { TrialBalanceData, TrialBalanceAccount, StatementOfChangesInEquityData, EquityComponent } from '../types/project';
 
 /**
  * Enhanced Statement of Changes in Equity Calculations
@@ -103,7 +103,7 @@ export function calculateStatementOfChangesInEquity(
     previousPeriodData = null
   } = options;
 
-  const accounts = trialBalance.rawData;
+  const accounts = trialBalance.accounts;
 
   // Get all equity-related balances
   const equityBalances = getEquityBalances(accounts, previousPeriodData);
@@ -168,15 +168,15 @@ function createEmptyEquityData(): DetailedEquityData {
   };
 }
 
-function getEquityBalances(accounts: TrialBalanceData['rawData'], previousPeriod: TrialBalanceData | null): EquityBalances {
+function getEquityBalances(accounts: TrialBalanceAccount[], previousPeriod: TrialBalanceData | null): EquityBalances {
   return {
     // Opening balances (from previous period or manual input)
-    shareCapitalOpening: previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Share Capital') : 0,
-    additionalPaidInOpening: previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Additional Paid-in Capital') : 0,
-    retainedEarningsOpening: previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Retained Earnings') : 0,
-    accumulatedOCIOpening: previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Accumulated Other Comprehensive Income') : 0,
-    otherReservesOpening: previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Other Reserves') : 0,
-    treasuryStockOpening: previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Treasury Stock') : 0,
+    shareCapitalOpening: previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Share Capital') : 0,
+    additionalPaidInOpening: previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Additional Paid-in Capital') : 0,
+    retainedEarningsOpening: previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Retained Earnings') : 0,
+    accumulatedOCIOpening: previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Accumulated Other Comprehensive Income') : 0,
+    otherReservesOpening: previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Other Reserves') : 0,
+    treasuryStockOpening: previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Treasury Stock') : 0,
 
     // Current period balances
     shareCapitalCurrent: getAccountBalance(accounts, 'Share Capital'),
@@ -188,7 +188,7 @@ function getEquityBalances(accounts: TrialBalanceData['rawData'], previousPeriod
   };
 }
 
-function calculateOCIComponents(accounts: TrialBalanceData['rawData']): OCIComponents {
+function calculateOCIComponents(accounts: TrialBalanceAccount[]): OCIComponents {
   const components = {
     foreignCurrencyTranslation: getAccountBalance(accounts, 'Foreign Currency Translation Adjustment'),
     unrealizedGains: getAccountBalance(accounts, 'Unrealized Gains on Securities'),
@@ -204,7 +204,7 @@ function calculateOCIComponents(accounts: TrialBalanceData['rawData']): OCICompo
   return components;
 }
 
-function calculateProfitLoss(accounts: TrialBalanceData['rawData']): number {
+function calculateProfitLoss(accounts: TrialBalanceAccount[]): number {
   // Calculate profit/loss by summing revenue and subtracting expenses
   const revenue = getAccountBalance(accounts, 'Revenue') + 
                  getAccountBalance(accounts, 'Sales') +
@@ -229,9 +229,9 @@ function calculateWeightedAverageShares(opening: number, issued: number, purchas
   return opening + (netChange / 2); // Assumes transactions occurred mid-year
 }
 
-function calculateShareTransactions(accounts: TrialBalanceData['rawData'], previousPeriod: TrialBalanceData | null): ShareTransactionDetails {
+function calculateShareTransactions(accounts: TrialBalanceAccount[], previousPeriod: TrialBalanceData | null): ShareTransactionDetails {
   const sharesOutstandingOpening = previousPeriod ? 
-    getAccountBalance(previousPeriod.rawData, 'Shares Outstanding') : 0;
+    getAccountBalance(previousPeriod.accounts, 'Shares Outstanding') : 0;
   
   const sharesIssued = getAccountBalance(accounts, 'Shares Issued During Period');
   const sharesPurchased = getAccountBalance(accounts, 'Treasury Shares Purchased');
@@ -246,7 +246,7 @@ function calculateShareTransactions(accounts: TrialBalanceData['rawData'], previ
   };
 }
 
-function calculateDividendDetails(accounts: TrialBalanceData['rawData'], shareDetails: ShareTransactionDetails): DividendDetails {
+function calculateDividendDetails(accounts: TrialBalanceAccount[], shareDetails: ShareTransactionDetails): DividendDetails {
   const interimDividends = getAccountBalance(accounts, 'Interim Dividends Paid');
   const finalDividends = getAccountBalance(accounts, 'Final Dividends Paid');
   const totalDividends = interimDividends + finalDividends;
@@ -265,7 +265,7 @@ function calculateDividendDetails(accounts: TrialBalanceData['rawData'], shareDe
   };
 }
 
-function buildShareCapitalComponent(balances: EquityBalances, accounts: TrialBalanceData['rawData'], includeShareBased: boolean): EnhancedEquityComponent {
+function buildShareCapitalComponent(balances: EquityBalances, accounts: TrialBalanceAccount[], includeShareBased: boolean): EnhancedEquityComponent {
   const shareBasedPayments = includeShareBased ? 
     getAccountBalance(accounts, 'Share-based Payment Expense') : 0;
 
@@ -403,11 +403,11 @@ function calculateTotalEquity(components: EnhancedEquityComponent[], treasurySto
   return totals;
 }
 
-function getAccountBalance(accounts: TrialBalanceData['rawData'], accountName: string): number {
+function getAccountBalance(accounts: TrialBalanceAccount[], accountName: string): number {
   const account = accounts.find(acc => 
     acc.accountName?.toLowerCase().includes(accountName.toLowerCase())
   );
-  return account ? (account.debit - account.credit) : 0;
+  return account ? (account.finalDebit - account.finalCredit) : 0;
 }
 
 /**

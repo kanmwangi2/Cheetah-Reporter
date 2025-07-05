@@ -48,6 +48,12 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [searchValue, setSearchValue] = React.useState("")
+  const [isMounted, setIsMounted] = React.useState(false)
+
+  // Ensure component is mounted (for hydration issues)
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const selectedOption = options.find((option) => option.value === value)
 
@@ -60,73 +66,110 @@ export function Combobox({
     )
   }, [options, searchValue])
 
-  const handleSelect = (optionValue: string) => {
-    onSelect(optionValue === value ? "" : optionValue)
+  const handleSelect = React.useCallback((optionValue: string) => {
+    if (!optionValue) return
+    onSelect(optionValue)
     setOpen(false)
     setSearchValue("")
-  }
+  }, [onSelect])
 
-  const handleClear = (e: React.MouseEvent) => {
+  const handleClear = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
+    e.preventDefault()
     onSelect("")
+  }, [onSelect])
+
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setOpen(false)
+      setSearchValue("")
+    }
+  }, [])
+
+  const handleOpenChange = React.useCallback((newOpen: boolean) => {
+    setOpen(newOpen)
+    if (!newOpen) {
+      setSearchValue("")
+    }
+  }, [])
+
+  // Return null if not mounted (prevent hydration mismatch)
+  if (!isMounted) {
+    return (
+      <div className={cn("w-full h-10 border border-input rounded-md bg-background", className)}>
+        <div className="h-full flex items-center px-3 text-muted-foreground">
+          {placeholder}
+        </div>
+      </div>
+    )
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-haspopup="listbox"
           className={cn(
-            "w-full justify-between",
+            "w-full justify-between h-10 px-3 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground",
             !selectedOption && "text-muted-foreground",
+            disabled && "cursor-not-allowed opacity-50",
             className
           )}
           disabled={disabled}
+          type="button"
         >
-          <span className="truncate">
+          <span className="truncate text-left">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
-          <div className="flex items-center gap-1">
-            {clearable && selectedOption && (
+          <div className="flex items-center gap-1 ml-2 shrink-0">
+            {clearable && selectedOption && !disabled && (
               <X
-                className="h-4 w-4 opacity-50 hover:opacity-100"
+                className="h-4 w-4 opacity-50 hover:opacity-100 cursor-pointer"
                 onClick={handleClear}
               />
             )}
-            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown className="h-4 w-4 opacity-50" />
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command shouldFilter={false}>
+      <PopoverContent 
+        className="w-[var(--radix-popover-trigger-width)] p-0 z-50" 
+        align="start"
+        side="bottom"
+        sideOffset={4}
+      >
+        <Command shouldFilter={false} onKeyDown={handleKeyDown}>
           <CommandInput 
             placeholder={searchPlaceholder}
             value={searchValue}
             onValueChange={setSearchValue}
+            className="h-9"
           />
-          <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
+          <CommandList className="max-h-[200px] overflow-y-auto">
+            <CommandEmpty className="py-6 text-center text-sm">
+              {emptyText}
+            </CommandEmpty>
             <CommandGroup>
               {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} // Use label for cmdk matching
-                  onSelect={() => handleSelect(option.value)} // Use option.value for our logic
-                  onClick={() => handleSelect(option.value)} // Fallback click handler
-                  className="flex items-center gap-2 cursor-pointer"
+                  value={option.value}
+                  onSelect={() => handleSelect(option.value)}
+                  className="flex items-start gap-2 cursor-pointer px-2 py-3 hover:bg-accent hover:text-accent-foreground"
                 >
                   <Check
                     className={cn(
-                      "h-4 w-4",
+                      "h-4 w-4 mt-0.5 shrink-0",
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  <div className="flex-1">
-                    <div className="font-medium">{option.label}</div>
+                  <div className="flex-1 space-y-1">
+                    <div className="font-medium leading-none">{option.label}</div>
                     {option.description && (
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground leading-none">
                         {option.description}
                       </div>
                     )}

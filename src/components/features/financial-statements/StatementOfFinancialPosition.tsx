@@ -48,7 +48,7 @@ export const StatementOfFinancialPosition: React.FC = () => {
         return;
       }
 
-      if (!activePeriod.mappedTrialBalance) {
+      if (!activePeriod.trialBalance.mappedTrialBalance) {
         setLoading(false);
         setError('No trial balance data found. Please import trial balance data first.');
         return;
@@ -62,7 +62,7 @@ export const StatementOfFinancialPosition: React.FC = () => {
         const adjustedFinancialPosition = await AdjustedFinancialCalculations.getStatementOfFinancialPosition(
           currentProject.id,
           activePeriod.id,
-          activePeriod.mappedTrialBalance,
+          activePeriod.trialBalance.mappedTrialBalance,
           activePeriod
         );
         

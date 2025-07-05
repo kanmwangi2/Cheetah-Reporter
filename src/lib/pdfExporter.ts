@@ -541,9 +541,9 @@ export class PDFExporter {
   }
 
   private calculateFinancialData() {
-    if (!this.activePeriod?.trialBalance?.rawData) return null
+    if (!this.activePeriod?.trialBalance?.accounts) return null
 
-    const trialBalance = this.activePeriod.trialBalance.rawData
+    const trialBalance = this.activePeriod.trialBalance.accounts
     
     const getAccountsByCategory = (keywords: string[], isCredit = false) => {
       return trialBalance.filter((item: TrialBalanceAccount) => 

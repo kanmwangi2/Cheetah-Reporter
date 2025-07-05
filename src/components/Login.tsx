@@ -140,8 +140,8 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
       
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-            <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          <div className="mx-auto h-16 w-32 flex items-center justify-center">
+            <img src="/cheetah-reporter-icon.svg" alt="Cheetah Reporter" className="h-16 w-16" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             {isLogin ? 'Sign in to your account' : 'Create your account'}

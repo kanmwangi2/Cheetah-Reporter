@@ -821,7 +821,7 @@ export class DisclosureEngine {
     const context: DisclosureContext = {
       project,
       period,
-      accounts: period.trialBalance?.rawData || [],
+      accounts: period.trialBalance?.accounts || [],
       financialRatios: {},
     };
 
@@ -945,7 +945,7 @@ export const generateProjectDisclosures = (
   const context: DisclosureContext = {
     project,
     period,
-    accounts: period.trialBalance.rawData,
+    accounts: period.trialBalance.accounts,
     financialRatios: financialRatios || {},
     industryType
   };

@@ -24,7 +24,7 @@ const VarianceAnalysis: React.FC = () => {
         const currentPeriod = currentProject.periods.find(p => p.id === currentPeriodId);
         const comparativePeriod = currentProject.periods.find(p => p.id === comparativePeriodId);
         
-        if (!currentPeriod?.mappedTrialBalance || !comparativePeriod?.mappedTrialBalance) {
+        if (!currentPeriod?.trialBalance.mappedTrialBalance || !comparativePeriod?.trialBalance.mappedTrialBalance) {
             return null;
         }
 

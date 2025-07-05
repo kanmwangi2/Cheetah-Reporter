@@ -24,7 +24,7 @@ const Validation: React.FC = () => {
   const { currentProject, activePeriodId } = useProjectStore();
 
   const activePeriod = currentProject?.periods.find((p: { id: string }) => p.id === activePeriodId) || null;
-  const mappedTrialBalance = activePeriod?.mappedTrialBalance || null;
+  const mappedTrialBalance = activePeriod?.trialBalance.mappedTrialBalance || null;
 
   if (!activePeriod) {
     return (

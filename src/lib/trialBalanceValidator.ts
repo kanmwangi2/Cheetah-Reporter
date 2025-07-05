@@ -86,7 +86,7 @@ export const validateAccountingEquation = (
 export const validateTrialBalanceBalance = (
   periodData: PeriodData | null
 ): ValidationResult => {
-  if (!periodData?.trialBalance?.rawData) {
+  if (!periodData?.trialBalance?.accounts) {
     return {
       check: "trial-balance-balance",
       status: "fail",
@@ -95,11 +95,11 @@ export const validateTrialBalanceBalance = (
     };
   }
 
-  const totalDebits = periodData.trialBalance.rawData.reduce(
+  const totalDebits = periodData.trialBalance.accounts.reduce(
     (sum: number, account: TrialBalanceAccount) => sum + account.debit,
     0
   );
-  const totalCredits = periodData.trialBalance.rawData.reduce(
+  const totalCredits = periodData.trialBalance.accounts.reduce(
     (sum: number, account: TrialBalanceAccount) => sum + account.credit,
     0
   );
@@ -163,10 +163,10 @@ export const validatePeriodConsistency = (
 
   // Check for significant account structure changes
   const currentAccounts = new Set(
-    currentPeriod.trialBalance?.rawData?.map((acc: TrialBalanceAccount) => acc.accountId) || []
+    currentPeriod.trialBalance?.accounts?.map((acc: TrialBalanceAccount) => acc.accountId) || []
   );
   const previousAccounts = new Set(
-    previousPeriod.trialBalance?.rawData?.map((acc: TrialBalanceAccount) => acc.accountId) || []
+    previousPeriod.trialBalance?.accounts?.map((acc: TrialBalanceAccount) => acc.accountId) || []
   );
 
   const addedAccounts = Array.from(currentAccounts).filter(
@@ -196,8 +196,8 @@ export const validatePeriodConsistency = (
 
   const significantVariances: { account: string; change: number }[] = [];
 
-  currentPeriod.trialBalance?.rawData?.forEach((currentAccount: TrialBalanceAccount) => {
-    const previousAccount = previousPeriod.trialBalance?.rawData?.find(
+  currentPeriod.trialBalance?.accounts?.forEach((currentAccount: TrialBalanceAccount) => {
+    const previousAccount = previousPeriod.trialBalance?.accounts?.find(
       (acc: TrialBalanceAccount) => acc.accountId === currentAccount.accountId
     );
 
@@ -257,7 +257,7 @@ export const validatePeriodConsistency = (
 export const validateChartOfAccountsStructure = (
   periodData: PeriodData | null
 ): ValidationResult => {
-  if (!periodData?.trialBalance?.rawData) {
+  if (!periodData?.trialBalance?.accounts) {
     return {
       check: "chart-of-accounts-structure",
       status: "fail",
@@ -273,7 +273,7 @@ export const validateChartOfAccountsStructure = (
 
   // Check for duplicate account codes
   const codeMap = new Map<string, number>();
-  periodData.trialBalance.rawData.forEach((account: TrialBalanceAccount) => {
+  periodData.trialBalance.accounts.forEach((account: TrialBalanceAccount) => {
     const count = codeMap.get(account.accountId) || 0;
     codeMap.set(account.accountId, count + 1);
   });
@@ -285,7 +285,7 @@ export const validateChartOfAccountsStructure = (
   });
 
   // Check for missing account names and invalid codes
-  periodData.trialBalance.rawData.forEach((account: TrialBalanceAccount) => {
+  periodData.trialBalance.accounts.forEach((account: TrialBalanceAccount) => {
     if (!account.accountName || account.accountName.trim() === '') {
       missingNames.push(account.accountId);
     }
@@ -487,7 +487,7 @@ export const validateLargeAccountMovements = (
   periodData: PeriodData | null,
   previousPeriods: PeriodData[] = []
 ): ValidationResult => {
-  if (!periodData?.trialBalance?.rawData) {
+  if (!periodData?.trialBalance?.accounts) {
     return {
       check: "large-account-movements",
       status: "warning",
@@ -500,7 +500,7 @@ export const validateLargeAccountMovements = (
   const threshold = 1000000; // $1M threshold for large balances
 
   // Identify accounts with large balances
-  periodData.trialBalance.rawData.forEach((account: TrialBalanceAccount) => {
+  periodData.trialBalance.accounts.forEach((account: TrialBalanceAccount) => {
     const balance = Math.abs(account.debit - account.credit);
     
     if (balance > threshold) {
@@ -511,7 +511,7 @@ export const validateLargeAccountMovements = (
 
       // If we have previous period data, calculate percentage change
       if (previousPeriods.length > 0) {
-        const previousAccount = previousPeriods[0].trialBalance?.rawData?.find(
+        const previousAccount = previousPeriods[0].trialBalance?.accounts?.find(
           (acc: TrialBalanceAccount) => acc.accountId === account.accountId
         );
 
@@ -652,15 +652,15 @@ export const runAdvancedTrialBalanceValidation = (
 
   // Core accounting validations
   results.push(validateTrialBalanceBalance(currentPeriod));
-  results.push(validateAccountingEquation(currentPeriod?.mappedTrialBalance || null));
+  results.push(validateAccountingEquation(currentPeriod?.trialBalance?.mappedTrialBalance || null));
   results.push(validateChartOfAccountsStructure(currentPeriod));
 
   // IFRS compliance validations
-  results.push(validateRequiredIfrsLineItems(currentPeriod?.mappedTrialBalance || null));
-  results.push(validateAccountMappingConsistency(currentPeriod?.mappedTrialBalance || null));
+  results.push(validateRequiredIfrsLineItems(currentPeriod?.trialBalance?.mappedTrialBalance || null));
+  results.push(validateAccountMappingConsistency(currentPeriod?.trialBalance?.mappedTrialBalance || null));
 
   // Quality assurance validations
-  results.push(validateSuspenseAccounts(currentPeriod?.mappedTrialBalance || null));
+  results.push(validateSuspenseAccounts(currentPeriod?.trialBalance?.mappedTrialBalance || null));
   results.push(validateLargeAccountMovements(currentPeriod, previousPeriods));
 
   // Period consistency validations (if previous periods available)

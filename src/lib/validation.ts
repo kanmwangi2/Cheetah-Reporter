@@ -306,22 +306,22 @@ export const validateIfrsClassification = (mappedTrialBalance: MappedTrialBalanc
  * @returns A ValidationResult.
  */
 export const validateUnmappedAccounts = (periodData: PeriodData): ValidationResult => {
-    if (!periodData.mappedTrialBalance) {
+    if (!periodData.trialBalance.mappedTrialBalance) {
         return { check: "unmapped-accounts", status: "pass", isValid: true, message: "Mapped trial balance not available, skipping unmapped account check." };
     }
-    const allAccountIds = new Set(periodData.trialBalance.rawData.map(acc => acc.accountId).filter(Boolean));
-    const mappedAccountIds = getMappedAccountIds(periodData.mappedTrialBalance);
+    const allAccountIds = new Set(periodData.trialBalance.accounts.map((acc: TrialBalanceAccount) => acc.accountId).filter(Boolean));
+    const mappedAccountIds = getMappedAccountIds(periodData.trialBalance.mappedTrialBalance);
 
-    const unmappedIds = new Set([...allAccountIds].filter(id => !mappedAccountIds.has(id)));
+    const unmappedIds = new Set([...allAccountIds].filter((id: string) => !mappedAccountIds.has(id)));
 
     if (unmappedIds.size > 0) {
-        const unmappedAccounts = periodData.trialBalance.rawData.filter(acc => acc.accountId && unmappedIds.has(acc.accountId));
+        const unmappedAccounts = periodData.trialBalance.accounts.filter((acc: TrialBalanceAccount) => acc.accountId && unmappedIds.has(acc.accountId));
         return {
             check: "unmapped-accounts",
             status: "warning",
             isValid: false,
             message: `Found ${unmappedAccounts.length} unmapped trial balance accounts.`,
-            details: { unmappedAccounts: unmappedAccounts.map(a => `${a.accountName} (${a.accountId})`) },
+            details: { unmappedAccounts: unmappedAccounts.map((a: TrialBalanceAccount) => `${a.accountName} (${a.accountId})`) },
         };
     }
 
@@ -529,7 +529,7 @@ export const validateTotalEquityReconciliation = (mappedTrialBalance: MappedTria
  * @returns ValidationResult An object indicating if the hierarchy is valid.
  */
 export const validateAccountCodeHierarchy = (period: PeriodData | null): ValidationResult | null => {
-    if (!period || !period.trialBalance || !period.trialBalance.rawData || period.trialBalance.rawData.length === 0) {
+    if (!period || !period.trialBalance || !period.trialBalance.accounts || period.trialBalance.accounts.length === 0) {
         return {
             check: "account-code-hierarchy",
             status: "pass",
@@ -538,10 +538,9 @@ export const validateAccountCodeHierarchy = (period: PeriodData | null): Validat
         };
     }
 
-    const accountCodes = new Set(period.trialBalance.rawData.map((account) => (account as unknown as TrialBalanceAccount).accountId).filter(Boolean));
-    const accounts = period.trialBalance.rawData
-        .map(account => account as unknown as TrialBalanceAccount)
-        .filter((account) => account.accountId && typeof account.accountId === 'string' && account.accountId.length > 2);
+    const accountCodes = new Set(period.trialBalance.accounts.map((account: TrialBalanceAccount) => account.accountId).filter(Boolean));
+    const accounts = period.trialBalance.accounts
+        .filter((account: TrialBalanceAccount) => account.accountId && typeof account.accountId === 'string' && account.accountId.length > 2);
 
     if (accountCodes.size === 0) {
         return {
@@ -602,7 +601,7 @@ export const validateAccountCodeHierarchy = (period: PeriodData | null): Validat
  * @returns ValidationResult An object indicating if any accounts have unusually large balances.
  */
 export const validateLargeAccountMovements = (period: PeriodData | null, stdDevThreshold: number = 3): ValidationResult | null => {
-    if (!period || !period.trialBalance || !period.trialBalance.rawData || period.trialBalance.rawData.length < 10) {
+    if (!period || !period.trialBalance || !period.trialBalance.accounts || period.trialBalance.accounts.length < 10) {
         return {
             check: "large-account-movements",
             status: "pass",
@@ -611,8 +610,8 @@ export const validateLargeAccountMovements = (period: PeriodData | null, stdDevT
         };
     }
 
-    const balances = period.trialBalance.rawData
-        .map((acc) => Math.abs((acc as unknown as TrialBalanceAccount).debit - (acc as unknown as TrialBalanceAccount).credit))
+    const balances = period.trialBalance.accounts
+        .map((acc: TrialBalanceAccount) => Math.abs(acc.debit - acc.credit))
         .filter((bal: number) => !isNaN(bal) && bal > 0);
 
     if (balances.length < 10) {
@@ -624,8 +623,8 @@ export const validateLargeAccountMovements = (period: PeriodData | null, stdDevT
         };
     }
 
-    const mean = balances.reduce((a, b) => a + b, 0) / balances.length;
-    const stdDev = Math.sqrt(balances.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / balances.length);
+    const mean = balances.reduce((a: number, b: number) => a + b, 0) / balances.length;
+    const stdDev = Math.sqrt(balances.map((x: number) => Math.pow(x - mean, 2)).reduce((a: number, b: number) => a + b, 0) / balances.length);
 
     // Avoid flagging everything if stdDev is very small (e.g., all balances are similar)
     if (stdDev < 1) {
@@ -639,9 +638,8 @@ export const validateLargeAccountMovements = (period: PeriodData | null, stdDevT
 
     const threshold = mean + (stdDev * stdDevThreshold);
 
-    const anomalies = period.trialBalance.rawData.filter((acc) => {
-        const account = acc as unknown as TrialBalanceAccount;
-        const balance = Math.abs(account.debit - account.credit);
+    const anomalies = period.trialBalance.accounts.filter((acc: TrialBalanceAccount) => {
+        const balance = Math.abs(acc.debit - acc.credit);
         return !isNaN(balance) && balance > threshold;
     });
 
@@ -675,7 +673,7 @@ export const validateLargeAccountMovements = (period: PeriodData | null, stdDevT
  * @returns ValidationResult An object indicating if the trial balance is balanced.
  */
 export const validateTrialBalanceSum = (period: PeriodData | null): ValidationResult | null => {
-  if (!period || !period.trialBalance || !period.trialBalance.rawData) {
+  if (!period || !period.trialBalance || !period.trialBalance.accounts) {
     return {
         check: "trial-balance-sum",
         status: "pass", // Not a failure, just can't perform the check
@@ -684,9 +682,8 @@ export const validateTrialBalanceSum = (period: PeriodData | null): ValidationRe
     };
   }
 
-  const totalBalance = period.trialBalance.rawData.reduce((sum, account) => {
-    const acc = account as unknown as TrialBalanceAccount;
-    const balance = acc.debit - acc.credit;
+  const totalBalance = period.trialBalance.accounts.reduce((sum: number, account: TrialBalanceAccount) => {
+    const balance = account.debit - account.credit;
     return sum + (isNaN(balance) ? 0 : balance);
   }, 0);
 
@@ -720,7 +717,7 @@ export const validateTrialBalanceSum = (period: PeriodData | null): ValidationRe
  * @returns ValidationResult An object indicating if there are duplicate account codes.
  */
 export const validateDuplicateAccountCodes = (period: PeriodData | null): ValidationResult | null => {
-  if (!period || !period.trialBalance || !period.trialBalance.rawData || period.trialBalance.rawData.length === 0) {
+  if (!period || !period.trialBalance || !period.trialBalance.accounts || period.trialBalance.accounts.length === 0) {
     return {
       check: "duplicate-account-codes",
       status: "pass",
@@ -729,7 +726,7 @@ export const validateDuplicateAccountCodes = (period: PeriodData | null): Valida
     };
   }
 
-  const accountCodes = period.trialBalance.rawData.map((account) => (account as unknown as TrialBalanceAccount).accountId).filter(Boolean);
+  const accountCodes = period.trialBalance.accounts.map((account: TrialBalanceAccount) => account.accountId).filter(Boolean);
   const seenCodes = new Set<string>();
   const duplicates: string[] = [];
 
@@ -789,7 +786,7 @@ export const validateSuspenseAccounts = (mappedTrialBalance: MappedTrialBalance 
  * @returns ValidationResult An object indicating if any accounts have missing details.
  */
 export const validateMissingAccountDetails = (period: PeriodData | null): ValidationResult | null => {
-  if (!period || !period.trialBalance || !period.trialBalance.rawData || period.trialBalance.rawData.length === 0) {
+  if (!period || !period.trialBalance || !period.trialBalance.accounts || period.trialBalance.accounts.length === 0) {
     return {
       check: "missing-account-details",
       status: "pass",
@@ -798,8 +795,8 @@ export const validateMissingAccountDetails = (period: PeriodData | null): Valida
     };
   }
 
-  const accountsWithMissingDetails = period.trialBalance.rawData.filter(
-    (account) => !(account as unknown as TrialBalanceAccount).accountId || !(account as unknown as TrialBalanceAccount).accountName
+  const accountsWithMissingDetails = period.trialBalance.accounts.filter(
+    (account: TrialBalanceAccount) => !account.accountId || !account.accountName
   );
 
   if (accountsWithMissingDetails.length > 0) {
@@ -809,9 +806,8 @@ export const validateMissingAccountDetails = (period: PeriodData | null): Valida
       isValid: false,
       message: `Found ${accountsWithMissingDetails.length} account(s) with missing codes or names.`,
       details: {
-        errors: accountsWithMissingDetails.map(acc => {
-          const account = acc as unknown as TrialBalanceAccount;
-          return `Account with balance ${account.debit - account.credit} is missing a code or name.`;
+        errors: accountsWithMissingDetails.map((acc: TrialBalanceAccount) => {
+          return `Account with balance ${acc.debit - acc.credit} is missing a code or name.`;
         }),
         accountsWithMissingDetails: accountsWithMissingDetails,
       }
@@ -897,11 +893,10 @@ export function checkEquityReconciliation(sfp: MappedTrialBalance, soce: Stateme
  * @returns ValidationResult An object indicating if any accounts have unusual balances.
  */
 export function findAccountAnomalies(period: PeriodData): ValidationResult | null {
-    const anomalies = period.trialBalance.rawData.map(account => {
-        const acc = account as unknown as TrialBalanceAccount;
-        const balance = acc.debit - acc.credit;
-        return { ...acc, balance };
-    }).filter(account => {
+    const anomalies = period.trialBalance.accounts.map((account: TrialBalanceAccount) => {
+        const balance = account.debit - account.credit;
+        return { ...account, balance };
+    }).filter((account: TrialBalanceAccount & { balance: number }) => {
         if (Math.abs(account.balance) > 0.01) {
             const isAssetOrExpense = account.accountName.match(/asset|expense/i);
             const isLiabilityOrEquityOrIncome = account.accountName.match(/liability|equity|income|revenue/i);
@@ -910,7 +905,7 @@ export function findAccountAnomalies(period: PeriodData): ValidationResult | nul
             if (isLiabilityOrEquityOrIncome && account.balance > 0) return true;
         }
         return false;
-    }).map(account => ({
+    }).map((account: TrialBalanceAccount & { balance: number }) => ({
         accountId: account.accountId,
         accountName: account.accountName,
         balance: account.balance,
@@ -986,7 +981,7 @@ export const validateSfpBalanceSimple = (mappedTrialBalance: MappedTrialBalance 
  * Simple trial balance sum validation
  */
 export const validateTrialBalanceSumSimple = (period: PeriodData | null): ValidationResult => {
-  if (!period?.trialBalance?.rawData || period.trialBalance.rawData.length === 0) {
+  if (!period?.trialBalance?.accounts || period.trialBalance.accounts.length === 0) {
     return {
       check: "trial-balance-sum",
       status: "pass",
@@ -995,9 +990,8 @@ export const validateTrialBalanceSumSimple = (period: PeriodData | null): Valida
     };
   }
 
-  const totalBalance = period.trialBalance.rawData.reduce((sum, account) => {
-    const accountData = account as unknown as TrialBalanceAccount;
-    const balance = (accountData.debit || 0) - (accountData.credit || 0);
+  const totalBalance = period.trialBalance.accounts.reduce((sum: number, account: TrialBalanceAccount) => {
+    const balance = (account.debit || 0) - (account.credit || 0);
     return sum + (isNaN(balance) ? 0 : balance);
   }, 0);
 

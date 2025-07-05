@@ -123,7 +123,7 @@ export const exportToExcel = async (
 
   // Trial Balance sheets for each period
   periods.forEach((period) => {
-    if (period.mappedTrialBalance) {
+    if (period.trialBalance.mappedTrialBalance) {
       const tbData = generateTrialBalanceSheet(period, options);
       const tbSheet = XLSX.utils.aoa_to_sheet(tbData);
       const sheetName = `TB_${period.reportingDate.getFullYear()}_${String(period.reportingDate.getMonth() + 1).padStart(2, '0')}`;
@@ -132,7 +132,7 @@ export const exportToExcel = async (
   });
 
   // Financial Statements sheets
-  if (periods.length > 0 && periods[0].mappedTrialBalance) {
+  if (periods.length > 0 && periods[0].trialBalance.mappedTrialBalance) {
     const fsData = generateFinancialStatementsSheet(periods[0], options);
     const fsSheet = XLSX.utils.aoa_to_sheet(fsData);
     XLSX.utils.book_append_sheet(workbook, fsSheet, 'Financial_Statements');
@@ -172,14 +172,14 @@ export const exportToCSV = async (
 
   // Trial Balance data
   periods.forEach(period => {
-    if (period.mappedTrialBalance) {
+    if (period.trialBalance.mappedTrialBalance) {
       csvData.push(`"Period: ${formatDate(period.reportingDate, options.dateFormat)}"`);
       csvData.push('"Account ID","Account Name","Debit","Credit","Statement","Line Item"');
       
       // Flatten all accounts
       const allAccounts: (TrialBalanceAccount & { statement: string; lineItem: string })[] = [];
       
-      Object.entries(period.mappedTrialBalance).forEach(([statement, lineItems]) => {
+      Object.entries(period.trialBalance.mappedTrialBalance).forEach(([statement, lineItems]) => {
         if (lineItems && typeof lineItems === 'object') {
           Object.entries(lineItems).forEach(([lineItem, accounts]) => {
             if (Array.isArray(accounts)) {
@@ -236,7 +236,7 @@ export const exportToJSON = async (
       fiscalPeriod: period.fiscalPeriod,
       status: period.status,
       trialBalance: period.trialBalance,
-      mappedTrialBalance: period.mappedTrialBalance
+      mappedTrialBalance: period.trialBalance.mappedTrialBalance
     }))
   };
 
@@ -272,8 +272,8 @@ const generateTrialBalanceSheet = (period: PeriodData, options: ExportOptions): 
   data.push([]);
   data.push(['Account ID', 'Account Name', 'Debit', 'Credit', 'Statement', 'Line Item']);
   
-  if (period.mappedTrialBalance) {
-    Object.entries(period.mappedTrialBalance).forEach(([statement, lineItems]) => {
+  if (period.trialBalance.mappedTrialBalance) {
+    Object.entries(period.trialBalance.mappedTrialBalance).forEach(([statement, lineItems]) => {
       Object.entries(lineItems).forEach(([lineItem, accounts]) => {
         (accounts as TrialBalanceAccount[]).forEach((account: TrialBalanceAccount) => {
           data.push([
@@ -297,16 +297,15 @@ const generateFinancialStatementsSheet = (period: PeriodData, options: ExportOpt
   
   data.push([`Financial Statements - ${formatDate(period.reportingDate, options.dateFormat)}`]);
   data.push([]);
-  
-  if (period.mappedTrialBalance) {
+    if (period.trialBalance.mappedTrialBalance) {
     // Statement of Financial Position
     data.push(['STATEMENT OF FINANCIAL POSITION']);
     data.push([]);
     data.push(['ASSETS']);
     
-    if (period.mappedTrialBalance.assets) {
-      Object.entries(period.mappedTrialBalance.assets).forEach(([lineItem, accounts]) => {
-        const total = accounts.reduce((sum, acc) => sum + acc.debit - acc.credit, 0);
+    if (period.trialBalance.mappedTrialBalance.assets) {
+      Object.entries(period.trialBalance.mappedTrialBalance.assets).forEach(([lineItem, accounts]) => {
+        const total = (accounts as TrialBalanceAccount[]).reduce((sum: number, acc: TrialBalanceAccount) => sum + acc.finalDebit - acc.finalCredit, 0);
         data.push([lineItem.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), total]);
       });
     }
@@ -314,16 +313,16 @@ const generateFinancialStatementsSheet = (period: PeriodData, options: ExportOpt
     data.push([]);
     data.push(['LIABILITIES AND EQUITY']);
     
-    if (period.mappedTrialBalance.liabilities) {
-      Object.entries(period.mappedTrialBalance.liabilities).forEach(([lineItem, accounts]) => {
-        const total = accounts.reduce((sum, acc) => sum + acc.credit - acc.debit, 0);
+    if (period.trialBalance.mappedTrialBalance.liabilities) {
+      Object.entries(period.trialBalance.mappedTrialBalance.liabilities).forEach(([lineItem, accounts]) => {
+        const total = (accounts as TrialBalanceAccount[]).reduce((sum: number, acc: TrialBalanceAccount) => sum + acc.finalCredit - acc.finalDebit, 0);
         data.push([lineItem.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), total]);
       });
     }
-    
-    if (period.mappedTrialBalance.equity) {
-      Object.entries(period.mappedTrialBalance.equity).forEach(([lineItem, accounts]) => {
-        const total = accounts.reduce((sum, acc) => sum + acc.credit - acc.debit, 0);
+
+    if (period.trialBalance.mappedTrialBalance.equity) {
+      Object.entries(period.trialBalance.mappedTrialBalance.equity).forEach(([lineItem, accounts]) => {
+        const total = (accounts as TrialBalanceAccount[]).reduce((sum: number, acc: TrialBalanceAccount) => sum + acc.finalCredit - acc.finalDebit, 0);
         data.push([lineItem.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), total]);
       });
     }
@@ -332,16 +331,16 @@ const generateFinancialStatementsSheet = (period: PeriodData, options: ExportOpt
     data.push(['STATEMENT OF PROFIT OR LOSS']);
     data.push([]);
     
-    if (period.mappedTrialBalance.revenue) {
-      Object.entries(period.mappedTrialBalance.revenue).forEach(([lineItem, accounts]) => {
-        const total = accounts.reduce((sum, acc) => sum + acc.credit - acc.debit, 0);
+    if (period.trialBalance.mappedTrialBalance.revenue) {
+      Object.entries(period.trialBalance.mappedTrialBalance.revenue).forEach(([lineItem, accounts]) => {
+        const total = (accounts as TrialBalanceAccount[]).reduce((sum: number, acc: TrialBalanceAccount) => sum + acc.finalCredit - acc.finalDebit, 0);
         data.push([lineItem.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), total]);
       });
     }
     
-    if (period.mappedTrialBalance.expenses) {
-      Object.entries(period.mappedTrialBalance.expenses).forEach(([lineItem, accounts]) => {
-        const total = accounts.reduce((sum, acc) => sum + acc.debit - acc.credit, 0);
+    if (period.trialBalance.mappedTrialBalance.expenses) {
+      Object.entries(period.trialBalance.mappedTrialBalance.expenses).forEach(([lineItem, accounts]) => {
+        const total = (accounts as TrialBalanceAccount[]).reduce((sum: number, acc: TrialBalanceAccount) => sum + acc.finalDebit - acc.finalCredit, 0);
         data.push([lineItem.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), total]);
       });
     }
@@ -369,9 +368,9 @@ const generateComparativeSheet = (periods: PeriodData[], options: ExportOptions)
   // Collect all unique line items
   const allLineItems = new Set<string>();
   periods.forEach(period => {
-    if (period.mappedTrialBalance) {
-      Object.values(period.mappedTrialBalance).forEach(section => {
-        Object.keys(section).forEach(lineItem => allLineItems.add(lineItem));
+    if (period.trialBalance.mappedTrialBalance) {
+      Object.values(period.trialBalance.mappedTrialBalance).forEach((section: { [key: string]: TrialBalanceAccount[] }) => {
+        Object.keys(section).forEach((lineItem: string) => allLineItems.add(lineItem));
       });
     }
   });
@@ -383,12 +382,12 @@ const generateComparativeSheet = (periods: PeriodData[], options: ExportOptions)
     
     periods.forEach(period => {
       let value = 0;
-      if (period.mappedTrialBalance) {
-        Object.values(period.mappedTrialBalance).forEach(section => {
+      if (period.trialBalance.mappedTrialBalance) {
+        Object.values(period.trialBalance.mappedTrialBalance).forEach((section: { [key: string]: TrialBalanceAccount[] }) => {
           if (section[lineItem]) {
             value = (section[lineItem] as TrialBalanceAccount[]).reduce((sum: number, acc: TrialBalanceAccount) => {
               // Determine if this should be debit or credit based on statement type
-              return sum + Math.abs(acc.debit - acc.credit);
+              return sum + Math.abs(acc.finalDebit - acc.finalCredit);
             }, 0);
           }
         });

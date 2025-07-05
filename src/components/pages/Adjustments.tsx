@@ -36,8 +36,8 @@ export const AdjustmentsPage: React.FC<AdjustmentsPageProps> = ({ periodId }) =>
   
   // Get accounts from trial balance for the dialog
   const activePeriod = currentProject?.periods.find(p => p.id === effectivePeriodId);
-  const accounts = activePeriod?.mappedTrialBalance ? 
-    Object.values(activePeriod.mappedTrialBalance).flatMap(statementAccounts =>
+  const accounts = activePeriod?.trialBalance?.mappedTrialBalance ? 
+    Object.values(activePeriod.trialBalance.mappedTrialBalance).flatMap(statementAccounts =>
       Object.values(statementAccounts).flat() as TrialBalanceAccount[]
     ).map((account) => ({
       id: account.accountId,

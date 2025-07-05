@@ -13,7 +13,7 @@ import { AdjustmentsService } from './adjustmentsService';
 function convertMappedToTrialBalanceData(mapped: MappedTrialBalance, period: PeriodData): TrialBalanceData {
   // Flatten all accounts from mapped structure
   const rawData: TrialBalanceAccount[] = [];
-  const mappings: { [accountId: string]: { statement: string; lineItem: string } } = {};
+  const mappings: { [accountId: string]: { statement: keyof MappedTrialBalance | 'unmapped'; lineItem: string } } = {};
 
   // Process each statement type
   Object.entries(mapped).forEach(([statementType, lineItems]) => {
@@ -21,7 +21,7 @@ function convertMappedToTrialBalanceData(mapped: MappedTrialBalance, period: Per
       (accounts as TrialBalanceAccount[]).forEach(account => {
         rawData.push(account);
         mappings[account.accountId] = {
-          statement: statementType,
+          statement: statementType as keyof MappedTrialBalance,
           lineItem: lineItem
         };
       });
@@ -29,9 +29,17 @@ function convertMappedToTrialBalanceData(mapped: MappedTrialBalance, period: Per
   });
 
   return {
-    rawData,
+    importDate: period.trialBalance.importDate,
+    importedBy: period.trialBalance.importedBy,
+    fileName: period.trialBalance.fileName,
+    accounts: rawData,
     mappings,
-    hasAdjustments: period.trialBalance.hasAdjustments
+    mappedTrialBalance: mapped,
+    version: period.trialBalance.version,
+    isLocked: period.trialBalance.isLocked,
+    hasAdjustments: period.trialBalance.hasAdjustments,
+    lastModified: period.trialBalance.lastModified,
+    editHistory: period.trialBalance.editHistory
   };
 }
 

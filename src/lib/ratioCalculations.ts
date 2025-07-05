@@ -1,4 +1,4 @@
-import type { TrialBalanceData } from '../types/project';
+import type { TrialBalanceData, TrialBalanceAccount } from '../types/project';
 
 /**
  * Comprehensive Financial Ratio Analysis Suite
@@ -224,7 +224,7 @@ interface FinancialData {
 }
 
 function extractFinancialData(trialBalance: TrialBalanceData): FinancialData {
-  const accounts = trialBalance.rawData;
+  const accounts = trialBalance.accounts;
   
   return {
     // Assets
@@ -269,11 +269,11 @@ function extractFinancialData(trialBalance: TrialBalanceData): FinancialData {
   };
 }
 
-function getAccountBalance(accounts: TrialBalanceData['rawData'], accountName: string): number {
+function getAccountBalance(accounts: TrialBalanceAccount[], accountName: string): number {
   const account = accounts.find(acc => 
     acc.accountName?.toLowerCase().includes(accountName.toLowerCase())
   );
-  return account ? (account.debit - account.credit) : 0;
+  return account ? (account.finalDebit - account.finalCredit) : 0;
 }
 
 function calculateLiquidityRatios(data: FinancialData): LiquidityRatios {

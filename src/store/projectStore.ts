@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Project, PeriodData, TrialBalanceData } from '../types/project';
+import type { Project, PeriodData, TrialBalanceData, TrialBalanceAccount } from '../types/project';
 import type { AuditLog } from '../lib/auditTrailService';
 import { ProjectService } from '../lib/projectService';
 import { logAuditEvent } from '../lib/auditTrailService';
@@ -29,6 +29,9 @@ interface ProjectState {
   deleteProject: (projectId: string, userId: string, userEmail: string) => Promise<void>;
   addPeriod: (projectId: string, periodData: Omit<PeriodData, 'id'>, userId: string, userEmail: string) => Promise<void>;
   updatePeriodTrialBalance: (periodId: string, trialBalanceData: TrialBalanceData) => Promise<void>;
+  updateTrialBalance: (periodId: string, trialBalance: TrialBalanceData) => Promise<void>;
+  getTrialBalance: (periodId: string) => TrialBalanceData | null;
+  getFinalTrialBalanceAccounts: (periodId: string) => TrialBalanceAccount[];
   subscribeToUserProjects: (userId: string) => () => void;
 }
 
@@ -79,8 +82,21 @@ export const useProjectStore = create<ProjectState>()(
             id: initialPeriodData.reportingDate.toISOString().split('T')[0], // e.g. 2023-12-31
             ...initialPeriodData,
             trialBalance: {
-              rawData: [],
+              importDate: new Date(),
+              importedBy: user.uid,
+              accounts: [],
               mappings: templateMappings,
+              mappedTrialBalance: {
+                assets: {},
+                liabilities: {},
+                equity: {},
+                revenue: {},
+                expenses: {}
+              },
+              version: 1,
+              hasAdjustments: false,
+              lastModified: new Date(),
+              editHistory: []
             },
           };
 
@@ -159,6 +175,69 @@ export const useProjectStore = create<ProjectState>()(
             console.error('Failed to update trial balance:', error);
             set({ error: (error as Error).message, loading: false });
         }
+    },
+
+    updateTrialBalance: async (periodId: string, trialBalance: TrialBalanceData) => {
+        const { currentProject, setCurrentProject } = get();
+        const { user } = useAuthStore.getState();
+
+        if (!currentProject || !user) {
+            console.error("No current project or user");
+            return;
+        }
+
+        set({ loading: true, error: null });
+        try {
+            const updatedPeriods = currentProject.periods.map(p => 
+                p.id === periodId ? { 
+                    ...p, 
+                    trialBalance
+                } : p
+            );
+
+            const updatedProject = { ...currentProject, periods: updatedPeriods };
+            
+            await ProjectService.updateProject(currentProject.id, { periods: updatedPeriods });
+            await logAuditEvent(currentProject.id, user.uid, user.email || '', 'updateTrialBalance', { 
+                periodId, 
+                version: trialBalance.version 
+            });
+            
+            setCurrentProject(updatedProject);
+            set({ loading: false });
+
+        } catch (error: unknown) {
+            console.error('Failed to update trial balance:', error);
+            set({ error: (error as Error).message, loading: false });
+        }
+    },
+
+    getTrialBalance: (periodId: string): TrialBalanceData | null => {
+        const { currentProject } = get();
+        if (!currentProject) return null;
+        
+        const period = currentProject.periods.find(p => p.id === periodId);
+        return period?.trialBalance || null;
+    },
+
+    getFinalTrialBalanceAccounts: (periodId: string): TrialBalanceAccount[] => {
+        const { currentProject } = get();
+        if (!currentProject) return [];
+        
+        const period = currentProject.periods.find(p => p.id === periodId);
+        const trialBalance = period?.trialBalance;
+        
+        if (trialBalance) {
+            // Return accounts with final amounts calculated
+            return trialBalance.accounts.map(account => ({
+                ...account,
+                // Ensure final amounts are calculated
+                finalDebit: account.originalDebit + account.adjustmentDebit,
+                finalCredit: account.originalCredit + account.adjustmentCredit
+            }));
+        }
+        
+        return [];
     },
 
     loadUserProjects: async (userId) => {

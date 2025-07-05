@@ -48,9 +48,9 @@ export const Preview: React.FC = () => {
 
   // Financial calculations using useMemo for performance
   const financialData = useMemo(() => {
-    if (!activePeriod?.mappedTrialBalance) return null;
+    if (!activePeriod?.trialBalance.mappedTrialBalance) return null;
 
-    const totals = calculateTotals(activePeriod.mappedTrialBalance);
+    const totals = calculateTotals(activePeriod.trialBalance.mappedTrialBalance);
 
     const { 
       totalAssets, totalLiabilities, totalEquity, 

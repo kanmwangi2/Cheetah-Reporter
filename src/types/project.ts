@@ -33,8 +33,7 @@ export interface DisclosureItem {
 export interface PeriodData {
   id: string; // e.g., "2023-12-31"
   reportingDate: Date;
-  trialBalance: TrialBalanceData;
-  mappedTrialBalance?: MappedTrialBalance;
+  trialBalance: TrialBalanceData; // Single source of truth for trial balance
   // Multi-period support enhancements
   periodType: 'annual' | 'interim' | 'quarterly' | 'monthly';
   fiscalYear: number;
@@ -54,10 +53,28 @@ export interface PeriodData {
 }
 
 export interface TrialBalanceData {
-  rawData: TrialBalanceAccount[];
-  mappings: { [accountId: string]: { statement: string; lineItem: string } };
-  mappedTrialBalance?: MappedTrialBalance; // The structured trial balance data
-  hasAdjustments?: boolean; // Indicates if adjustments have been applied
+  // Import metadata
+  importDate: Date;
+  importedBy: string;
+  fileName?: string;
+  
+  // Core account data - single source of truth
+  accounts: TrialBalanceAccount[];
+  
+  // Account-to-statement mappings
+  mappings: { [accountId: string]: { statement: keyof MappedTrialBalance | 'unmapped'; lineItem: string } };
+  
+  // Computed statement structure (derived from accounts + mappings)
+  mappedTrialBalance: MappedTrialBalance;
+  
+  // Status and versioning
+  version: number; // Track versions for editing history
+  isLocked?: boolean; // Prevent further edits when finalized
+  hasAdjustments: boolean;
+  lastModified: Date;
+  
+  // Audit trail for all changes
+  editHistory: TrialBalanceEdit[];
 }
 
 export interface AuditLog {
@@ -118,8 +135,44 @@ export interface MappingSuggestion {
 export interface TrialBalanceAccount {
   accountId: string;
   accountName: string;
-  debit: number;
-  credit: number;
+  
+  // ORIGINAL IMPORTED AMOUNTS (never change after import)
+  originalDebit: number;
+  originalCredit: number;
+  
+  // ADJUSTMENT AMOUNTS (from journal entries)
+  adjustmentDebit: number;
+  adjustmentCredit: number;
+  
+  // FINAL AMOUNTS (original + adjustments - this is what statements use)
+  finalDebit: number;
+  finalCredit: number;
+  
+  // For backward compatibility (maps to original amounts)
+  debit: number; // = originalDebit
+  credit: number; // = originalCredit
+  
+  // User editable fields
+  description?: string;
+  isEdited?: boolean;
+  lastModified?: Date;
+  modifiedBy?: string;
+}
+
+
+export interface TrialBalanceEdit {
+  id: string;
+  timestamp: Date;
+  userId: string;
+  userName: string;
+  action: 'import' | 'edit_account' | 'edit_mapping' | 'edit_amount' | 'add_adjustment' | 'remove_adjustment';
+  accountId?: string;
+  changes: {
+    field: string;
+    oldValue: string | number | boolean | null;
+    newValue: string | number | boolean | null;
+  }[];
+  description?: string;
 }
 
 export interface FinancialStatementLine {

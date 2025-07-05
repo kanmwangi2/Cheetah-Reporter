@@ -1,6 +1,7 @@
 import type { 
   PeriodData, 
   Project,
+  TrialBalanceAccount,
   VarianceAnalysisResult,
   ComparativeStatement,
   MultiPeriodAnalysis,
@@ -59,7 +60,7 @@ export const getComparablePeriods = (
     if (!periodTypes.includes(period.periodType)) return false;
     
     // Must have mapped trial balance for comparison
-    if (!period.mappedTrialBalance) return false;
+    if (!period.trialBalance.mappedTrialBalance) return false;
     
     return true;
   });
@@ -100,7 +101,7 @@ export const getComparativePeriod = (
     default: {
       // Find the previous period chronologically
       const sortedPeriods = project.periods
-        .filter(p => p.id !== currentPeriod.id && p.mappedTrialBalance)
+        .filter(p => p.id !== currentPeriod.id && p.trialBalance.mappedTrialBalance)
         .sort((a, b) => new Date(b.reportingDate).getTime() - new Date(a.reportingDate).getTime());
       
       const currentIndex = sortedPeriods.findIndex(p => new Date(p.reportingDate) < currentDate);
@@ -110,7 +111,7 @@ export const getComparativePeriod = (
 
   // Find the closest period to the target date
   const comparativePeriods = project.periods
-    .filter(p => p.id !== currentPeriod.id && p.mappedTrialBalance)
+    .filter(p => p.id !== currentPeriod.id && p.trialBalance.mappedTrialBalance)
     .map(period => ({
       period,
       dateDiff: Math.abs(new Date(period.reportingDate).getTime() - targetDate.getTime())
@@ -169,13 +170,13 @@ export const performVarianceAnalysis = (
   previousPeriod: PeriodData,
   thresholds: VarianceThresholds = DEFAULT_VARIANCE_THRESHOLDS
 ): VarianceAnalysisResult[] => {
-  if (!currentPeriod.mappedTrialBalance || !previousPeriod.mappedTrialBalance) {
+  if (!currentPeriod.trialBalance.mappedTrialBalance || !previousPeriod.trialBalance.mappedTrialBalance) {
     return [];
   }
 
   const results: VarianceAnalysisResult[] = [];
-  const currentTB = currentPeriod.mappedTrialBalance;
-  const previousTB = previousPeriod.mappedTrialBalance;
+  const currentTB = currentPeriod.trialBalance.mappedTrialBalance;
+  const previousTB = previousPeriod.trialBalance.mappedTrialBalance;
 
   // Analyze each section
   const sections: Array<{ key: keyof MappedTrialBalance, category: VarianceAnalysisResult['category'] }> = [
@@ -228,7 +229,7 @@ export const generateComparativeStatements = (
 ): ComparativeStatement | null => {
   if (periods.length < 2) return null;
 
-  const validPeriods = periods.filter(p => p.mappedTrialBalance);
+  const validPeriods = periods.filter(p => p.trialBalance.mappedTrialBalance);
   if (validPeriods.length < 2) return null;
 
   // Determine which sections to include based on statement type
@@ -248,7 +249,7 @@ export const generateComparativeStatements = (
   const allLineItems = new Set<string>();
   validPeriods.forEach(period => {
     sectionsToInclude.forEach(section => {
-      const sectionData = period.mappedTrialBalance?.[section];
+      const sectionData = period.trialBalance.mappedTrialBalance?.[section];
       if (sectionData) {
         Object.keys(sectionData).forEach(lineItem => allLineItems.add(lineItem));
       }
@@ -264,9 +265,9 @@ export const generateComparativeStatements = (
     validPeriods.forEach(period => {
       let totalValue = 0;
       sectionsToInclude.forEach(section => {
-        const sectionData = period.mappedTrialBalance?.[section];
+        const sectionData = period.trialBalance.mappedTrialBalance?.[section];
         const accounts = sectionData?.[lineItem] || [];
-        totalValue += accounts.reduce((sum, acc) => sum + acc.debit - acc.credit, 0);
+        totalValue += (accounts as TrialBalanceAccount[]).reduce((sum: number, acc: TrialBalanceAccount) => sum + acc.finalDebit - acc.finalCredit, 0);
       });
       values[period.id] = totalValue;
     });
@@ -338,7 +339,7 @@ export const performTrendAnalysis = (
   metricName: string
 ): TrendAnalysis => {
   const sortedPeriods = periods
-    .filter(p => p.mappedTrialBalance)
+    .filter(p => p.trialBalance.mappedTrialBalance)
     .sort((a, b) => new Date(a.reportingDate).getTime() - new Date(b.reportingDate).getTime());
 
   const values = sortedPeriods.map(metricExtractor);
@@ -466,52 +467,52 @@ export const generateMultiPeriodAnalysis = (
 
   // Generate trend analyses for key metrics
   const trends: TrendAnalysis[] = [
-    performTrendAnalysis(periods, (p) => {
-      const revenue = p.mappedTrialBalance?.revenue;
+    performTrendAnalysis(periods, (p): number => {
+      const revenue = p.trialBalance.mappedTrialBalance?.revenue;
       if (!revenue) return 0;
-      return Object.values(revenue).reduce((sum, accounts) => 
-        sum + accounts.reduce((accSum, acc) => accSum + acc.debit - acc.credit, 0), 0);
+      return Object.values(revenue).reduce((sum: number, accounts: TrialBalanceAccount[]) => 
+        sum + accounts.reduce((accSum: number, acc: TrialBalanceAccount) => accSum + acc.finalDebit - acc.finalCredit, 0), 0);
     }, 'Total Revenue'),
     
-    performTrendAnalysis(periods, (p) => {
-      const assets = p.mappedTrialBalance?.assets;
+    performTrendAnalysis(periods, (p): number => {
+      const assets = p.trialBalance.mappedTrialBalance?.assets;
       if (!assets) return 0;
-      return Object.values(assets).reduce((sum, accounts) => 
-        sum + accounts.reduce((accSum, acc) => accSum + acc.debit - acc.credit, 0), 0);
+      return Object.values(assets).reduce((sum: number, accounts: TrialBalanceAccount[]) => 
+        sum + accounts.reduce((accSum: number, acc: TrialBalanceAccount) => accSum + acc.finalDebit - acc.finalCredit, 0), 0);
     }, 'Total Assets'),
     
-    performTrendAnalysis(periods, (p) => {
-      const expenses = p.mappedTrialBalance?.expenses;
+    performTrendAnalysis(periods, (p): number => {
+      const expenses = p.trialBalance.mappedTrialBalance?.expenses;
       if (!expenses) return 0;
-      return Object.values(expenses).reduce((sum, accounts) => 
-        sum + accounts.reduce((accSum, acc) => accSum + acc.debit - acc.credit, 0), 0);
+      return Object.values(expenses).reduce((sum: number, accounts: TrialBalanceAccount[]) => 
+        sum + accounts.reduce((accSum: number, acc: TrialBalanceAccount) => accSum + acc.finalDebit - acc.finalCredit, 0), 0);
     }, 'Total Expenses')
   ];
 
   // Calculate key metrics for each period
   const keyMetrics: { [metric: string]: { [periodId: string]: number } } = {};
   const metricCalculators = {
-    'Total Revenue': (p: PeriodData) => {
-      const revenue = p.mappedTrialBalance?.revenue;
+    'Total Revenue': (p: PeriodData): number => {
+      const revenue = p.trialBalance.mappedTrialBalance?.revenue;
       if (!revenue) return 0;
-      return Object.values(revenue).reduce((sum, accounts) => 
-        sum + accounts.reduce((accSum, acc) => accSum + acc.debit - acc.credit, 0), 0);
+      return Object.values(revenue).reduce((sum: number, accounts: TrialBalanceAccount[]) => 
+        sum + accounts.reduce((accSum: number, acc: TrialBalanceAccount) => accSum + acc.finalDebit - acc.finalCredit, 0), 0);
     },
-    'Total Assets': (p: PeriodData) => {
-      const assets = p.mappedTrialBalance?.assets;
+    'Total Assets': (p: PeriodData): number => {
+      const assets = p.trialBalance.mappedTrialBalance?.assets;
       if (!assets) return 0;
-      return Object.values(assets).reduce((sum, accounts) => 
-        sum + accounts.reduce((accSum, acc) => accSum + acc.debit - acc.credit, 0), 0);
+      return Object.values(assets).reduce((sum: number, accounts: TrialBalanceAccount[]) => 
+        sum + accounts.reduce((accSum: number, acc: TrialBalanceAccount) => accSum + acc.finalDebit - acc.finalCredit, 0), 0);
     },
-    'Net Income': (p: PeriodData) => {
-      const revenue = p.mappedTrialBalance?.revenue;
-      const expenses = p.mappedTrialBalance?.expenses;
+    'Net Income': (p: PeriodData): number => {
+      const revenue = p.trialBalance.mappedTrialBalance?.revenue;
+      const expenses = p.trialBalance.mappedTrialBalance?.expenses;
       if (!revenue || !expenses) return 0;
       
-      const totalRevenue = Object.values(revenue).reduce((sum, accounts) => 
-        sum + accounts.reduce((accSum, acc) => accSum + acc.debit - acc.credit, 0), 0);
-      const totalExpenses = Object.values(expenses).reduce((sum, accounts) => 
-        sum + accounts.reduce((accSum, acc) => accSum + acc.debit - acc.credit, 0), 0);
+      const totalRevenue = Object.values(revenue).reduce((sum: number, accounts: TrialBalanceAccount[]) => 
+        sum + accounts.reduce((accSum: number, acc: TrialBalanceAccount) => accSum + acc.finalDebit - acc.finalCredit, 0), 0);
+      const totalExpenses = Object.values(expenses).reduce((sum: number, accounts: TrialBalanceAccount[]) => 
+        sum + accounts.reduce((accSum: number, acc: TrialBalanceAccount) => accSum + acc.finalDebit - acc.finalCredit, 0), 0);
         
       return totalRevenue - totalExpenses;
     }

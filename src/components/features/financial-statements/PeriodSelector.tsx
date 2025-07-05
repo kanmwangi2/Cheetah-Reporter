@@ -221,7 +221,7 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
                 <span>Status: {activePeriod.status}</span>
                 <span>Type: {activePeriod.periodType}</span>
                 {activePeriod.fiscalYear && <span>FY: {activePeriod.fiscalYear}</span>}
-                {activePeriod.mappedTrialBalance && <span className="text-green-600">✓ Mapped</span>}
+                {activePeriod.trialBalance.mappedTrialBalance && <span className="text-green-600">✓ Mapped</span>}
               </div>
             );
           })()}

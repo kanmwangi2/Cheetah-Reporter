@@ -52,8 +52,21 @@ export const ProjectSetup: React.FC = () => {
       isComparative: false,
       status: 'draft' as const,
       trialBalance: {
-        rawData: [],
+        importDate: new Date(),
+        importedBy: '',
+        accounts: [],
         mappings: {},
+        mappedTrialBalance: {
+          assets: {},
+          liabilities: {},
+          equity: {},
+          revenue: {},
+          expenses: {}
+        },
+        version: 1,
+        hasAdjustments: false,
+        lastModified: new Date(),
+        editHistory: []
       }
     }
 

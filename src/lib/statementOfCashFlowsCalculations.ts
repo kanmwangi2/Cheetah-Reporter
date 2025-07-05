@@ -1,4 +1,4 @@
-import type { TrialBalanceData, CashFlowData, CashFlowMethod, WorkingCapitalComponents } from '@/types/project';
+import type { TrialBalanceData, TrialBalanceAccount, CashFlowData, CashFlowMethod, WorkingCapitalComponents } from '@/types/project';
 
 /**
  * Enhanced Cash Flow Calculations
@@ -71,7 +71,7 @@ function calculateIndirectMethod(
   previousPeriod: TrialBalanceData | null,
   options: { includeNonCashAdjustments: boolean; includeWorkingCapitalDetail: boolean }
 ): DetailedCashFlowData {
-  const accounts = trialBalance.rawData;
+  const accounts = trialBalance.accounts;
   
   // Get key amounts
   const netIncome = getAccountBalance(accounts, 'Net Income') || 
@@ -144,7 +144,7 @@ function calculateIndirectMethod(
   // Net increase and cash balances
   const netIncrease = operating.total + investing.total + financing.total;
   const cashAtBeginning = previousPeriod ? 
-    getAccountBalance(previousPeriod.rawData, 'Cash and Cash Equivalents') || 0 : 0;
+    getAccountBalance(previousPeriod.accounts, 'Cash and Cash Equivalents') || 0 : 0;
   const cashAtEnd = getAccountBalance(accounts, 'Cash and Cash Equivalents') || 0;
 
   return {
@@ -173,7 +173,7 @@ function calculateDirectMethod(
   previousPeriod: TrialBalanceData | null,
   options: { includeNonCashAdjustments: boolean; includeWorkingCapitalDetail: boolean }
 ): DetailedCashFlowData {
-  const accounts = trialBalance.rawData;
+  const accounts = trialBalance.accounts;
 
   // Direct method operating activities
   const cashFromCustomers = getAccountBalance(accounts, 'Cash Receipts from Customers') || 
@@ -242,7 +242,7 @@ function calculateDirectMethod(
 
   const netIncrease = operating.total + investing.total + financing.total;
   const cashAtBeginning = previousPeriod ? 
-    getAccountBalance(previousPeriod.rawData, 'Cash and Cash Equivalents') || 0 : 0;
+    getAccountBalance(previousPeriod.accounts, 'Cash and Cash Equivalents') || 0 : 0;
   const cashAtEnd = getAccountBalance(accounts, 'Cash and Cash Equivalents') || 0;
 
   // Calculate working capital components if requested
@@ -265,7 +265,7 @@ function calculateDirectMethod(
  * Calculate working capital changes for indirect method
  */
 function calculateWorkingCapitalChanges(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ) {
   if (!previousPeriod) {
@@ -277,31 +277,31 @@ function calculateWorkingCapitalChanges(
       id: 'accounts-receivable',
       label: 'Increase in accounts receivable',
       current: getAccountBalance(accounts, 'Accounts Receivable') || 0,
-      previous: getAccountBalance(previousPeriod.rawData, 'Accounts Receivable') || 0
+      previous: getAccountBalance(previousPeriod.accounts, 'Accounts Receivable') || 0
     },
     {
       id: 'inventory',
       label: 'Increase in inventory',
       current: getAccountBalance(accounts, 'Inventory') || 0,
-      previous: getAccountBalance(previousPeriod.rawData, 'Inventory') || 0
+      previous: getAccountBalance(previousPeriod.accounts, 'Inventory') || 0
     },
     {
       id: 'prepaid-expenses',
       label: 'Increase in prepaid expenses',
       current: getAccountBalance(accounts, 'Prepaid Expenses') || 0,
-      previous: getAccountBalance(previousPeriod.rawData, 'Prepaid Expenses') || 0
+      previous: getAccountBalance(previousPeriod.accounts, 'Prepaid Expenses') || 0
     },
     {
       id: 'accounts-payable',
       label: 'Increase in accounts payable',
       current: getAccountBalance(accounts, 'Accounts Payable') || 0,
-      previous: getAccountBalance(previousPeriod.rawData, 'Accounts Payable') || 0
+      previous: getAccountBalance(previousPeriod.accounts, 'Accounts Payable') || 0
     },
     {
       id: 'accrued-liabilities',
       label: 'Increase in accrued liabilities',
       current: getAccountBalance(accounts, 'Accrued Liabilities') || 0,
-      previous: getAccountBalance(previousPeriod.rawData, 'Accrued Liabilities') || 0
+      previous: getAccountBalance(previousPeriod.accounts, 'Accrued Liabilities') || 0
     }
   ];
 
@@ -330,7 +330,7 @@ function calculateWorkingCapitalChanges(
  * Calculate detailed working capital components
  */
 function calculateWorkingCapitalComponents(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ): WorkingCapitalComponents {
   const current = {
@@ -342,11 +342,11 @@ function calculateWorkingCapitalComponents(
   };
 
   const previous = previousPeriod ? {
-    accountsReceivable: getAccountBalance(previousPeriod.rawData, 'Accounts Receivable') || 0,
-    inventory: getAccountBalance(previousPeriod.rawData, 'Inventory') || 0,
-    prepaidExpenses: getAccountBalance(previousPeriod.rawData, 'Prepaid Expenses') || 0,
-    accountsPayable: getAccountBalance(previousPeriod.rawData, 'Accounts Payable') || 0,
-    accruedLiabilities: getAccountBalance(previousPeriod.rawData, 'Accrued Liabilities') || 0
+    accountsReceivable: getAccountBalance(previousPeriod.accounts, 'Accounts Receivable') || 0,
+    inventory: getAccountBalance(previousPeriod.accounts, 'Inventory') || 0,
+    prepaidExpenses: getAccountBalance(previousPeriod.accounts, 'Prepaid Expenses') || 0,
+    accountsPayable: getAccountBalance(previousPeriod.accounts, 'Accounts Payable') || 0,
+    accruedLiabilities: getAccountBalance(previousPeriod.accounts, 'Accrued Liabilities') || 0
   } : {
     accountsReceivable: 0,
     inventory: 0,
@@ -372,7 +372,7 @@ function calculateWorkingCapitalComponents(
  * Calculate investing activities
  */
 function calculateInvestingActivities(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ) {
   const purchaseOfPPE = getAccountBalance(accounts, 'Capital Expenditures') || 
@@ -424,7 +424,7 @@ function calculateInvestingActivities(
  * Calculate financing activities
  */
 function calculateFinancingActivities(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ) {
   const borrowings = getAccountBalance(accounts, 'Proceeds from Borrowings') || 
@@ -475,40 +475,39 @@ function calculateFinancingActivities(
 
 // Utility functions
 
-function getAccountBalance(accounts: TrialBalanceData['rawData'], accountName: string): number {
+function getAccountBalance(accounts: TrialBalanceAccount[], accountName: string): number {
   const account = accounts.find(acc => 
     acc.accountName?.toLowerCase().includes(accountName.toLowerCase())
   );
-  // Calculate balance as debit minus credit (for most account types)
-  // This might need refinement based on account type (assets/expenses vs liabilities/equity/revenue)
-  return account ? (account.debit - account.credit) : 0;
+  // Calculate balance as finalDebit minus finalCredit (includes adjustments)
+  return account ? (account.finalDebit - account.finalCredit) : 0;
 }
 
 function estimateCashFromCustomers(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ): number {
   const revenue = getAccountBalance(accounts, 'Revenue');
   const arCurrent = getAccountBalance(accounts, 'Accounts Receivable');
-  const arPrevious = previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Accounts Receivable') : 0;
+  const arPrevious = previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Accounts Receivable') : 0;
   return revenue - (arCurrent - arPrevious);
 }
 
 function estimateCashToSuppliers(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ): number {
   const cogs = getAccountBalance(accounts, 'Cost of Goods Sold');
   const inventoryCurrent = getAccountBalance(accounts, 'Inventory');
-  const inventoryPrevious = previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Inventory') : 0;
+  const inventoryPrevious = previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Inventory') : 0;
   const apCurrent = getAccountBalance(accounts, 'Accounts Payable');
-  const apPrevious = previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Accounts Payable') : 0;
+  const apPrevious = previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Accounts Payable') : 0;
   
   return cogs + (inventoryCurrent - inventoryPrevious) - (apCurrent - apPrevious);
 }
 
 function estimateOperatingCashPayments(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ): number {
   const operatingExpenses = getAccountBalance(accounts, 'Operating Expenses') +
@@ -516,19 +515,19 @@ function estimateOperatingCashPayments(
                            getAccountBalance(accounts, 'Selling Expenses');
   const depreciation = getAccountBalance(accounts, 'Depreciation Expense');
   const prepaidCurrent = getAccountBalance(accounts, 'Prepaid Expenses');
-  const prepaidPrevious = previousPeriod ? getAccountBalance(previousPeriod.rawData, 'Prepaid Expenses') : 0;
+  const prepaidPrevious = previousPeriod ? getAccountBalance(previousPeriod.accounts, 'Prepaid Expenses') : 0;
   
   return operatingExpenses - depreciation + (prepaidCurrent - prepaidPrevious);
 }
 
 function estimatePPEPurchases(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ): number {
   if (!previousPeriod) return 0;
   
   const ppeCurrent = getAccountBalance(accounts, 'Property, Plant and Equipment');
-  const ppePrevious = getAccountBalance(previousPeriod.rawData, 'Property, Plant and Equipment');
+  const ppePrevious = getAccountBalance(previousPeriod.accounts, 'Property, Plant and Equipment');
   const depreciation = getAccountBalance(accounts, 'Depreciation Expense');
   const disposals = getAccountBalance(accounts, 'Asset Disposals') || 0;
   
@@ -536,29 +535,29 @@ function estimatePPEPurchases(
 }
 
 function estimateBorrowingChanges(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ): number {
   if (!previousPeriod) return 0;
   
   const debtCurrent = getAccountBalance(accounts, 'Long-term Debt') + 
                      getAccountBalance(accounts, 'Short-term Debt');
-  const debtPrevious = getAccountBalance(previousPeriod.rawData, 'Long-term Debt') + 
-                      getAccountBalance(previousPeriod.rawData, 'Short-term Debt');
+  const debtPrevious = getAccountBalance(previousPeriod.accounts, 'Long-term Debt') + 
+                      getAccountBalance(previousPeriod.accounts, 'Short-term Debt');
   
   return Math.max(0, debtCurrent - debtPrevious); // Only net increases
 }
 
 function estimateEquityChanges(
-  accounts: TrialBalanceData['rawData'],
+  accounts: TrialBalanceAccount[],
   previousPeriod: TrialBalanceData | null
 ): number {
   if (!previousPeriod) return 0;
   
   const equityCurrent = getAccountBalance(accounts, 'Share Capital') + 
                        getAccountBalance(accounts, 'Additional Paid-in Capital');
-  const equityPrevious = getAccountBalance(previousPeriod.rawData, 'Share Capital') + 
-                        getAccountBalance(previousPeriod.rawData, 'Additional Paid-in Capital');
+  const equityPrevious = getAccountBalance(previousPeriod.accounts, 'Share Capital') + 
+                        getAccountBalance(previousPeriod.accounts, 'Additional Paid-in Capital');
   
   return Math.max(0, equityCurrent - equityPrevious); // Only net increases
 }

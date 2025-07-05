@@ -294,10 +294,14 @@ export class AdjustmentsService {
     });
     
     // Apply adjustments to original trial balance
-    const adjustedBalances: TrialBalanceAccount[] = originalTrialBalance.rawData.map(account => {
+    const adjustedBalances: TrialBalanceAccount[] = originalTrialBalance.accounts.map(account => {
       const adjustment = adjustmentsByAccount.get(account.accountId) || 0;
       return {
         ...account,
+        adjustmentDebit: Math.max(0, adjustment),
+        adjustmentCredit: Math.max(0, -adjustment),
+        finalDebit: account.originalDebit + Math.max(0, adjustment),
+        finalCredit: account.originalCredit + Math.max(0, -adjustment),
         debit: Math.max(0, account.debit + Math.max(0, adjustment)),
         credit: Math.max(0, account.credit + Math.max(0, -adjustment))
       };
@@ -305,7 +309,7 @@ export class AdjustmentsService {
     
     // Add new accounts from adjustments that don't exist in original TB
     adjustmentsByAccount.forEach((adjustment, accountId) => {
-      const existingAccount = originalTrialBalance.rawData.find(acc => acc.accountId === accountId);
+      const existingAccount = originalTrialBalance.accounts.find(acc => acc.accountId === accountId);
       if (!existingAccount) {
         // Find account name from journal entries
         const accountName = journalEntries
@@ -315,8 +319,14 @@ export class AdjustmentsService {
         adjustedBalances.push({
           accountId,
           accountName,
-          debit: Math.max(0, adjustment),
-          credit: Math.max(0, -adjustment)
+          originalDebit: 0,
+          originalCredit: 0,
+          adjustmentDebit: Math.max(0, adjustment),
+          adjustmentCredit: Math.max(0, -adjustment),
+          finalDebit: Math.max(0, adjustment),
+          finalCredit: Math.max(0, -adjustment),
+          debit: Math.max(0, adjustment), // For backward compatibility
+          credit: Math.max(0, -adjustment) // For backward compatibility
         });
       }
     });
@@ -340,7 +350,7 @@ export class AdjustmentsService {
     
     return {
       ...originalTrialBalance,
-      rawData: adjustedBalances,
+      accounts: adjustedBalances,
       adjustments: journalEntries,
       adjustedBalances,
       adjustmentSummary

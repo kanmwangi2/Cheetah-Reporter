@@ -505,10 +505,10 @@ export class ComplianceChecker {
   }
 
   private getBalance(data: ComplianceData, accountName: string): number {
-    const account = data.trialBalance.rawData.find(acc => 
+    const account = data.trialBalance.accounts.find(acc => 
       acc.accountName?.toLowerCase().includes(accountName.toLowerCase())
     );
-    return account ? (account.debit - account.credit) : 0;
+    return account ? (account.finalDebit - account.finalCredit) : 0;
   }
 
   private calculateSummary(results: ComplianceResult[]): ComplianceSummary {

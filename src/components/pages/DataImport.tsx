@@ -3,13 +3,15 @@ import { useDropzone } from 'react-dropzone';
 import Papa from 'papaparse';
 import { useProjectStore } from '../../store/projectStore';
 import { useUIStore } from '../../store/uiStore';
+import { useAuth } from '../../contexts/useAuth';
 import { Button } from '../ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Combobox, type ComboboxOption } from '../ui/combobox';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { Upload, CheckCircle, Sparkles, Settings, Zap } from 'lucide-react';
+import { Upload, CheckCircle, Sparkles, Settings, Zap, Edit3, FileText } from 'lucide-react';
 import { generateMappingSuggestions, type MappingSuggestion } from '../../lib/automationEngine';
+import { TrialBalanceService } from '../../lib/trialBalanceService';
 import type { TrialBalanceAccount, MappedTrialBalance } from '../../types/project';
 
 type Step = 'upload' | 'map-accounts' | 'complete';
@@ -85,8 +87,9 @@ const DataImport: React.FC<DataImportProps> = ({ onComplete }) => {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  const { updatePeriodTrialBalance, activePeriodId } = useProjectStore();
+  const { updateTrialBalance, getTrialBalance, activePeriodId } = useProjectStore();
   const { setCurrentView } = useUIStore();
+  const { user } = useAuth();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -233,60 +236,51 @@ const DataImport: React.FC<DataImportProps> = ({ onComplete }) => {
     setCurrentView('account-classifications');
   };
 
-  // Transform account mapping to MappedTrialBalance structure
-  const transformToMappedTrialBalance = (
-    trialBalance: TrialBalanceAccount[],
-    mapping: AccountMapping
-  ): MappedTrialBalance => {
-    const mapped: MappedTrialBalance = {
-      assets: {},
-      liabilities: {},
-      equity: {},
-      revenue: {},
-      expenses: {}
-    };
-
-    // Group accounts by their mapped statement and line item
-    trialBalance.forEach(account => {
-      const accountMap = mapping[account.accountId];
-      if (!accountMap || accountMap.statement === 'unmapped' || accountMap.lineItem === 'none') {
-        return; // Skip unmapped accounts
-      }
-
-      const statement = accountMap.statement as keyof MappedTrialBalance;
-      const lineItem = accountMap.lineItem;
-
-      // Initialize the line item array if it doesn't exist
-      if (!mapped[statement][lineItem]) {
-        mapped[statement][lineItem] = [];
-      }
-
-      // Add the account to the appropriate line item
-      mapped[statement][lineItem].push(account);
-    });
-
-    return mapped;
-  };
-
   const completeImport = async () => {
     if (!activePeriodId) {
       setError('No active period selected');
       return;
     }
 
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
+
     try {
-      // Transform the mapping to the proper MappedTrialBalance structure
-      const mappedTrialBalance = transformToMappedTrialBalance(trialBalanceData, accountMapping);
+      console.log('🚀 Starting trial balance import...');
+      console.log('📊 Accounts to save:', trialBalanceData.length);
+      console.log('🗺️ Mappings to save:', Object.keys(accountMapping).length);
       
-      await updatePeriodTrialBalance(activePeriodId, {
-        rawData: trialBalanceData,
-        mappings: accountMapping,
-        mappedTrialBalance // Add the properly structured mapped data
+      // Create trial balance with full audit trail and editability
+      const trialBalance = TrialBalanceService.createFromImport(
+        trialBalanceData,
+        accountMapping,
+        user.uid,
+        user.email || 'Unknown User',
+        'manual-import.csv' // You could store the actual filename if available
+      );
+
+      console.log('✅ Trial balance created:', {
+        accountCount: trialBalance.accounts.length,
+        mappedCount: Object.values(trialBalance.mappings).filter(m => m.statement !== 'unmapped').length,
+        version: trialBalance.version,
+        hasAdjustments: trialBalance.hasAdjustments
       });
+
+      // Save the trial balance to Firebase
+      console.log('💾 Saving to database...');
+      await updateTrialBalance(activePeriodId, trialBalance);
+      
+      console.log('🎉 Trial balance successfully saved to database!');
+      console.log('📍 Period ID:', activePeriodId);
+      console.log('👤 Saved by:', user.email);
+      
       setStep('complete');
+      onComplete?.();
     } catch (error) {
-      console.error('Failed to save trial balance data:', error);
-      setError('Failed to save trial balance data');
+      console.error('❌ Failed to save trial balance data:', error);
+      setError(`Failed to save trial balance data: ${(error as Error).message}`);
     }
   };
 
@@ -537,33 +531,89 @@ const DataImport: React.FC<DataImportProps> = ({ onComplete }) => {
   );
 
   // Render Complete Step
-  const renderCompleteStep = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Import Complete</CardTitle>
-      </CardHeader>
-      <CardContent className="text-center">
-        <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Trial Balance Successfully Imported</h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Your trial balance has been imported and mapped to the IFRS structure.
-        </p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{trialBalanceData.length}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Accounts Imported</div>
+  const renderCompleteStep = () => {
+    // Verify data was saved by checking the store
+    const savedTrialBalance = activePeriodId ? getTrialBalance(activePeriodId) : null;
+    
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Import Complete ✅</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center">
+          <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Trial Balance Successfully Imported & Saved</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Your trial balance has been permanently saved to the database with full edit history and audit trail.
+          </p>
+          
+          {/* Data Confirmation */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="text-2xl font-bold text-green-600">{trialBalanceData.length}</div>
+              <div className="text-sm text-green-700 dark:text-green-400">Accounts Saved</div>
+            </div>
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="text-2xl font-bold text-blue-600">{mappedAccounts}</div>
+              <div className="text-sm text-blue-700 dark:text-blue-400">Accounts Mapped</div>
+            </div>
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+              <div className="text-2xl font-bold text-purple-600">
+                {savedTrialBalance ? savedTrialBalance.version : 'N/A'}
+              </div>
+              <div className="text-sm text-purple-700 dark:text-purple-400">Version Saved</div>
+            </div>
           </div>
-          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{mappedAccounts}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Accounts Mapped</div>
+
+          {/* Verification Status */}
+          {savedTrialBalance ? (
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-medium">✅ Data persistence verified! Trial balance is safely stored in the database.</span>
+              </div>
+              <div className="text-sm text-green-600 mt-2">
+                Saved on: {savedTrialBalance.importDate.toLocaleString()} | 
+                Version: {savedTrialBalance.version} | 
+                By: {savedTrialBalance.importedBy}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <div className="text-yellow-700 dark:text-yellow-400">
+                ⚠️ Unable to verify save status. Please check the Trial Balance page to confirm your data was saved.
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 justify-center">
+            <Button 
+              onClick={() => setCurrentView('trial-balance-editor')} 
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Edit3 className="h-4 w-4" />
+              Edit Trial Balance
+            </Button>
+            <Button 
+              onClick={() => setCurrentView('report-editor')}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Continue to Report Editor
+            </Button>
           </div>
-        </div>
-        <Button onClick={onComplete}>
-          Continue to Report Editor
-        </Button>
-      </CardContent>
-    </Card>
-  );
+
+          <div className="mt-4 text-sm text-gray-500">
+            💡 You can now edit account descriptions, amounts, and mappings in the Trial Balance page.
+            <br />
+            Your trial balance will never disappear - it's permanently saved with full edit history!
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6">

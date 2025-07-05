@@ -5,7 +5,7 @@ interface UIState {
   theme: 'light' | 'dark' | 'system'
   dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD' | 'DD-MM-YYYY'
   sidebarOpen: boolean
-  currentView: 'dashboard' | 'project-setup' | 'data-import' | 'adjustments' | 'data-export' | 'disclosures' | 'report-editor' | 'preview' | 'collaboration' | 'user-profile' | 'settings' | 'account-classifications'
+  currentView: 'dashboard' | 'project-setup' | 'data-import' | 'trial-balance-editor' | 'adjustments' | 'data-export' | 'disclosures' | 'report-editor' | 'preview' | 'collaboration' | 'user-profile' | 'settings' | 'account-classifications'
   activeTab: 'sfp' | 'pnl' | 'soce' | 'scf' | 'notes'
   isCommentSidebarOpen: boolean
   selectedCommentElementId: string | null

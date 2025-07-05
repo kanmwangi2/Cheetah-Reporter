@@ -148,8 +148,14 @@ export const parseQuickBooksIIF = (iifContent: string): TrialBalanceAccount[] =>
     accounts.push({
       accountId: generateAccountId(accountName),
       accountName: data.name,
-      debit: data.debit,
-      credit: data.credit
+      originalDebit: data.debit,
+      originalCredit: data.credit,
+      adjustmentDebit: 0,
+      adjustmentCredit: 0,
+      finalDebit: data.debit,
+      finalCredit: data.credit,
+      debit: data.debit, // For backward compatibility
+      credit: data.credit // For backward compatibility
     });
   });
   
@@ -168,8 +174,14 @@ export const parseXeroCSV = (csvContent: string): TrialBalanceAccount[] => {
   return parsed.data.map(record => ({
     accountId: record.AccountCode || generateAccountId(record.AccountName),
     accountName: record.AccountName || 'Unknown Account',
-    debit: parseFloat(String(record.Debit)) || 0,
-    credit: parseFloat(String(record.Credit)) || 0
+    originalDebit: parseFloat(String(record.Debit)) || 0,
+    originalCredit: parseFloat(String(record.Credit)) || 0,
+    adjustmentDebit: 0,
+    adjustmentCredit: 0,
+    finalDebit: parseFloat(String(record.Debit)) || 0,
+    finalCredit: parseFloat(String(record.Credit)) || 0,
+    debit: parseFloat(String(record.Debit)) || 0, // For backward compatibility
+    credit: parseFloat(String(record.Credit)) || 0 // For backward compatibility
   }));
 };
 
@@ -185,8 +197,14 @@ export const parseSageCSV = (csvContent: string): TrialBalanceAccount[] => {
   return parsed.data.map(record => ({
     accountId: record['Account Code'] || generateAccountId(record['Account Name']),
     accountName: record['Account Name'] || 'Unknown Account',
-    debit: parseFloat(String(record['Debit Amount'])) || 0,
-    credit: parseFloat(String(record['Credit Amount'])) || 0
+    originalDebit: parseFloat(String(record['Debit Amount'])) || 0,
+    originalCredit: parseFloat(String(record['Credit Amount'])) || 0,
+    adjustmentDebit: 0,
+    adjustmentCredit: 0,
+    finalDebit: parseFloat(String(record['Debit Amount'])) || 0,
+    finalCredit: parseFloat(String(record['Credit Amount'])) || 0,
+    debit: parseFloat(String(record['Debit Amount'])) || 0, // For backward compatibility
+    credit: parseFloat(String(record['Credit Amount'])) || 0 // For backward compatibility
   }));
 };
 

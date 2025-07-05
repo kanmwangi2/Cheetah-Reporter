@@ -55,7 +55,7 @@ export const DisclosureManager: React.FC<DisclosureManagerProps> = ({ className 
           isComparative: false,
           status: 'draft' as const,
         },
-        accounts: period?.trialBalance?.rawData || [],
+        accounts: period?.trialBalance?.accounts || [],
         financialRatios: {},
       };
       
@@ -99,7 +99,7 @@ export const DisclosureManager: React.FC<DisclosureManagerProps> = ({ className 
           isComparative: false,
           status: 'draft' as const,
         },
-        accounts: period?.trialBalance?.rawData || [],
+        accounts: period?.trialBalance?.accounts || [],
         financialRatios: {},
       };
       
